@@ -29,7 +29,7 @@ func (p PList) Add(n Peer) {
 
 func (p PList) RemoveByStruct(n Peer) {
 	p.m.Lock()
-	p.Peers[n.ID].Alive = false
+	//p.Peers[n.ID].Alive = false
 	if p.Peers[n.ID].Conn != nil {
 		p.Peers[n.ID].Conn.Close()
 	}
