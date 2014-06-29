@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"io"
 )
 
@@ -59,4 +60,9 @@ func RandString(n int) string {
 		bytes[i] = alphanum[b%byte(len(alphanum))]
 	}
 	return string(bytes)
+}
+
+func HashValue(value []byte) []byte {
+	hash := sha256.New()
+	return hash.Sum(value)
 }

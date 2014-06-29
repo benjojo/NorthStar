@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
+	"math"
 	"net"
+	"time"
 )
 
 func ChallengeClient(conn net.Conn) (err error) {
@@ -14,11 +18,67 @@ func ChallengeClient(conn net.Conn) (err error) {
 		return e
 	}
 	decrypted := DecryptText(Responce[:back], []byte(CC_KEY))
-	if string(decrypted) == Challenge {
-		return err
-	} else {
-		return errors.New("AAAAAAAAAA")
+	var clearnet bytes.Buffer
+	clearnet.Write(decrypted) // Write the decrypted blob into the nic
+	gobdec := gob.NewDecoder(&clearnet)
+	gobenc := gob.NewEncoder(&clearnet)
+
+	HSB := HandShakePack{}
+	err = gobdec.Decode(&HSB)
+	if err != nil {
+		return errors.New("Handshake failed, could not decode HS")
 	}
+
+	// Test the time lag to ensure its not a listen and repeat attack
+	if math.Abs(float64(time.Now().Unix()-HSB.ChallengeTime)) < 1000 {
+		return errors.New("Handshake failed, time lag between packet was too high")
+	}
+
+	// This is proabbly a good idea to check anyway
+	if HSB.ChallengeString == "" {
+		return errors.New("Handshake failed, there was no challenge string")
+	}
+
+	// Okay so this packet passes the valid test
+	// Now to make the responce to that packet.
+	HSB = HandShakePack{}
+	HSB.ChallengeTime = time.Now().Unix()
+	HSB.ChallengeResponce = string(HashValue(decrypted))
+	HSB.ChallengeString = Challenge // Just so the client does not fiddle with us.
+	gobenc.Encode(&HSB)
+	tocrypt := clearnet.Bytes()
+	upcomingchallenge := HashValue(tocrypt)
+	tosend := EncryptText(tocrypt, []byte(CC_KEY))
+	_, err = conn.Write(tosend)
+	if err != nil {
+		return errors.New("Handshake failed, Cannot write 2nd stage responce to NIC")
+	}
+	back, err = conn.Read(Responce)
+	if err != nil {
+		return errors.New("Handshake failed, Cannot read 3nd stage responce from client")
+	}
+
+	decrypted = DecryptText(Responce[:back], []byte(CC_KEY))
+	HSB = HandShakePack{}
+	err = gobdec.Decode(&HSB)
+	if err != nil {
+		return errors.New("Handshake failed, could not decode 3rd stage HS")
+	}
+	// Test the time lag to ensure its not a listen and repeat attack
+	if math.Abs(float64(time.Now().Unix()-HSB.ChallengeTime)) < 1000 {
+		return errors.New("Handshake failed, time lag between packet was too high")
+	}
+
+	if HSB.ChallengeResponce != string(upcomingchallenge) {
+		return errors.New("Handshake failed, Final hash was wrong!!!")
+	}
+	return err // Well it looks like this guy is legit.
+}
+
+type HandShakePack struct {
+	ChallengeString   string
+	ChallengeResponce string
+	ChallengeTime     int64
 }
 
 /*
