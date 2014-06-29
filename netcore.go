@@ -56,3 +56,15 @@ func ChallengeClient(conn net.Conn) (err error) {
 		return errors.New("AAAAAAAAAA")
 	}
 }
+
+/*
+
+Connect
+S->C "NS"
+C->S "{Cypto Blob containing Time and RandomString}"
+S->C "{Cypto Blob containing the hashed version of the random string and the time}"
+C->S "{ACK packet with hashed version of the decrypted GOB}"
+S->C "{Ask for Hostname and other info}"
+C->S "{GOB containing host info}"
+-- Normal Relay mode starts --
+*/
