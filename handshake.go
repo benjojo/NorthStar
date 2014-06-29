@@ -7,8 +7,8 @@ import (
 
 func ChallengeClient(conn net.Conn) (err error) {
 	Challenge := RandString(32)
-	conn.Write(EncryptText([]byte("NS "+Challenge), []byte(CC_KEY)))
-	Responce := make([]byte, 64)
+	conn.Write(EncryptText([]byte("NS"), []byte(CC_KEY)))
+	Responce := make([]byte, 1024)
 	back, e := conn.Read(Responce)
 	if e != nil {
 		return e
