@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// To be used when client is connecting TO a server
 func ChallengeClient(conn net.Conn) (err error) {
 	Challenge := RandString(32)
 	conn.Write(EncryptText([]byte("NS"), []byte(CC_KEY)))
@@ -38,12 +39,13 @@ func ChallengeClient(conn net.Conn) (err error) {
 	if HSB.ChallengeString == "" {
 		return errors.New("Handshake failed, there was no challenge string")
 	}
+	NewChallenge := HSB.ChallengeString
 
 	// Okay so this packet passes the valid test
 	// Now to make the responce to that packet.
 	HSB = HandShakePack{}
 	HSB.ChallengeTime = time.Now().Unix()
-	HSB.ChallengeResponce = string(HashValue(decrypted))
+	HSB.ChallengeResponce = string(HashValue([]byte(NewChallenge)))
 	HSB.ChallengeString = Challenge // Just so the client does not fiddle with us.
 	gobenc.Encode(&HSB)
 	tocrypt := clearnet.Bytes()
@@ -72,6 +74,38 @@ func ChallengeClient(conn net.Conn) (err error) {
 	if HSB.ChallengeResponce != string(upcomingchallenge) {
 		return errors.New("Handshake failed, Final hash was wrong!!!")
 	}
+	return err // Well it looks like this guy is legit.
+}
+
+// To be used when connecting TO a server
+func ChallengeServer(conn net.Conn) (err error) {
+	Responce := make([]byte, 1024)
+	back, e := conn.Read(Responce)
+	if e != nil {
+		return e
+	}
+	decrypted := DecryptText(Responce[:back], []byte(CC_KEY))
+	if decrypted != "NS" {
+		return errors.New("Handshake failed, Banner was incorrect")
+	}
+	// Check one done.
+	// Now to setup the GOB encoders
+	var clearnet bytes.Buffer
+	gobdec := gob.NewDecoder(&clearnet)
+	gobenc := gob.NewEncoder(&clearnet)
+
+	HSB := HandShakePack{}
+	Challenge := RandString(32)
+	Expectedresponce := HashValue([]byte(Challenge))
+	HSB.ChallengeString = Challenge
+	HSB.ChallengeTime = time.Now().Unix()
+
+	// Encode and crypt
+	gobenc.Encode(&HSB)
+	tocrypt := clearnet.Bytes()
+	tosend := EncryptText(tocrypt, []byte(CC_KEY))
+	conn.Write(tosend)
+
 	return err // Well it looks like this guy is legit.
 }
 
