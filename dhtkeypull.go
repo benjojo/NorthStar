@@ -3,11 +3,25 @@ package main
 import (
 	"code.google.com/p/go.crypto/ssh"
 	"errors"
+	"time"
 )
 
 func PullDHTKey() {
 	logger.Printf("Bootstrapping to find peers who have keys...")
-
+	time.Sleep(time.Second * 5) // Give the DHT some time to get hosts
+	for {
+		if GlobalPeerList.PeerCount != 0 {
+			for _, v := range GlobalPeerList.Peers {
+				err := AttemptToPullKeyFromHost(v.ApparentIP)
+				if err != nil {
+					logger.Printf("Failed to pull key from %s\n", v.ApparentIP)
+				} else {
+					return
+				}
+			}
+		}
+		time.Sleep(time.Second * 5)
+	}
 }
 
 func AttemptToPullKeyFromHost(host string) error {
