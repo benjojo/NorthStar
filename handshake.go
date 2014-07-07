@@ -79,32 +79,32 @@ func ChallengeClient(conn net.Conn) (err error) {
 
 // To be used when connecting TO a server
 func ChallengeServer(conn net.Conn) (err error) {
-	Responce := make([]byte, 1024)
-	back, e := conn.Read(Responce)
-	if e != nil {
-		return e
-	}
-	decrypted := DecryptText(Responce[:back], []byte(CC_KEY))
-	if decrypted != "NS" {
-		return errors.New("Handshake failed, Banner was incorrect")
-	}
-	// Check one done.
-	// Now to setup the GOB encoders
-	var clearnet bytes.Buffer
-	gobdec := gob.NewDecoder(&clearnet)
-	gobenc := gob.NewEncoder(&clearnet)
-
-	HSB := HandShakePack{}
-	Challenge := RandString(32)
-	Expectedresponce := HashValue([]byte(Challenge))
-	HSB.ChallengeString = Challenge
-	HSB.ChallengeTime = time.Now().Unix()
-
-	// Encode and crypt
-	gobenc.Encode(&HSB)
-	tocrypt := clearnet.Bytes()
-	tosend := EncryptText(tocrypt, []byte(CC_KEY))
-	conn.Write(tosend)
+	//Responce := make([]byte, 1024)
+	//back, e := conn.Read(Responce)
+	//if e != nil {
+	//	return e
+	//}
+	//decrypted := DecryptText(Responce[:back], []byte(CC_KEY))
+	//if string(decrypted) != "NS" {
+	//	return errors.New("Handshake failed, Banner was incorrect")
+	//}
+	//// Check one done.
+	//// Now to setup the GOB encoders
+	//var clearnet bytes.Buffer
+	//gobdec := gob.NewDecoder(&clearnet)
+	//gobenc := gob.NewEncoder(&clearnet)
+	//
+	//HSB := HandShakePack{}
+	//Challenge := RandString(32)
+	//Expectedresponce := HashValue([]byte(Challenge))
+	//HSB.ChallengeString = Challenge
+	//HSB.ChallengeTime = time.Now().Unix()
+	//
+	//// Encode and crypt
+	//gobenc.Encode(&HSB)
+	//tocrypt := clearnet.Bytes()
+	//tosend := EncryptText(tocrypt, []byte(CC_KEY))
+	//conn.Write(tosend)
 
 	return err // Well it looks like this guy is legit.
 }
@@ -125,4 +125,7 @@ C->S "{ACK packet with hashed version of the decrypted GOB}"
 S->C "{Ask for Hostname and other info}"
 C->S "{GOB containing host info}"
 -- Normal Relay mode starts --
+
+Wait a sec, why not just use SSH?
+
 */
