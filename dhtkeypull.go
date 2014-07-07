@@ -14,8 +14,9 @@ func PullDHTKey() {
 			for _, v := range GlobalPeerList.Peers {
 				err := AttemptToPullKeyFromHost(v.ApparentIP)
 				if err != nil {
-					logger.Printf("Failed to pull key from %s\n", v.ApparentIP)
+					logger.Printf("Failed to pull key from: %s\n", v.ApparentIP)
 				} else {
+					logger.Printf("Pulled key from: %s\n", v.ApparentIP)
 					return
 				}
 			}
