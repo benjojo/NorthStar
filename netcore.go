@@ -29,19 +29,6 @@ func WaitForConnections() {
 	}
 }
 
-func HandlePeerConn(conn net.Conn) {
-	err := ChallengeClient(conn)
-	defer conn.Close()
-	if err != nil {
-		logger.Printf("Failed client failed handshake because '%s'", err.Error())
-		conn.Close()
-	}
-	payload := make([]byte, 64000)
-	for {
-		conn.Read(payload)
-	}
-}
-
 type PeerPacket struct {
 	Service string
 	Message string
