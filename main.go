@@ -16,4 +16,6 @@ func main() {
 	CC_KEY = *key
 
 	logger.Printf("NorthStar - DHT Configuration Tool.")
+	go StartLookingForPeers()
+	PullDHTKey()
 }
