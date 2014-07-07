@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"sync"
 )
@@ -11,6 +12,7 @@ type Peer struct {
 	Conn       net.Conn
 	ID         int
 	Alive      bool
+	LastSeen   int64
 }
 
 type PList struct {
@@ -27,6 +29,17 @@ func (p PList) Add(n Peer) {
 	p.m.Unlock()
 }
 
+func (p PList) ContainsIP(host string) bool {
+	p.m.Lock()
+	defer p.m.Unlock()
+	for _, v := range p.Peers {
+		if v.ApparentIP == host {
+			return true
+		}
+	}
+	return false
+}
+
 func (p PList) RemoveByStruct(n Peer) {
 	p.m.Lock()
 	//p.Peers[n.ID].Alive = false
@@ -34,4 +47,22 @@ func (p PList) RemoveByStruct(n Peer) {
 		p.Peers[n.ID].Conn.Close()
 	}
 	p.m.Unlock()
+}
+
+var GlobalPeerList PList
+
+func StartLookingForPeers() {
+	GlobalPeerList = PList{}
+	GlobalPeerList.Peers = make(map[int]Peer)
+
+	hash := HashValue([]byte(CC_KEY))
+	inboundchan := StartDHT(fmt.Sprintf("%x", hash[:20]))
+	for host := range inboundchan {
+		if !GlobalPeerList.ContainsIP(host) {
+			NewPeer := Peer{}
+			NewPeer.Alive = false
+			NewPeer.ApparentIP = host
+			GlobalPeerList.Add(NewPeer)
+		}
+	}
 }
