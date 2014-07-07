@@ -30,9 +30,11 @@ func StartDHT(infohash string) chan string {
 	return outputchan
 }
 
+var ReadyToBroadcast bool = false
+
 func DHTBroadcast(d *dht.DHT, hash dht.InfoHash) {
 	for {
-		d.PeersRequest(string(hash), true) // Make sure you announce our existance too(!)
+		d.PeersRequest(string(hash), ReadyToBroadcast)
 		time.Sleep(time.Second * 30)
 	}
 }
