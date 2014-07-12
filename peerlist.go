@@ -21,7 +21,7 @@ type PList struct {
 	m         sync.Mutex
 }
 
-func (p PList) Add(n Peer) {
+func (p *PList) Add(n Peer) {
 	p.m.Lock()
 	p.PeerCount++
 	n.ID = p.PeerCount
@@ -65,6 +65,7 @@ func StartLookingForPeers() {
 			NewPeer.Alive = false
 			NewPeer.ApparentIP = host
 			GlobalPeerList.Add(NewPeer)
+			logger.Printf("DEBUG: Added new peer to the peer list, Host is %s", host)
 		}
 	}
 }

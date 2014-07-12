@@ -1,7 +1,10 @@
 package main
 
 import (
-	// "code.google.com/p/go.crypto/ssh"
+	"bytes"
+	"code.google.com/p/go.crypto/ssh"
+	"errors"
+	"io/ioutil"
 	"net"
 )
 
@@ -9,24 +12,111 @@ func WatchForNewPeers(inbound chan string) {
 
 }
 
-func WaitForConnections() {
-	l, err := net.Listen("tcp", "0.0.0.0:48563")
-	if err != nil {
-		logger.Fatalf("Could not start listening on TCP side (%s)", err)
-	}
-	defer l.Close()
+// 48563
 
-	logger.Println("TCP Side is ready for connections.")
+func WaitForConnections() {
+	private, err := ssh.ParsePrivateKey(PEM_KEY)
+	if err != nil {
+		logger.Fatal("I got the key. It looked legit. But I can't parse it. Exiting")
+	}
+	publicpart := private.PublicKey()
+	IsUserAllowedKeyAuth := make(map[string]bool)
+
+	// Setup logic for the SSH server.
+	SSHConfig := &ssh.ServerConfig{
+		PasswordCallback: func(conn ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
+			if conn.User() == "gimmekeys" && string(pass) == "gimmekeys" {
+				perms := ssh.Permissions{}
+				logger.Println("Authed a Key Pull")
+				return &perms, nil
+			} else {
+				return nil, errors.New("Auth Failed")
+			}
+		},
+		PublicKeyCallback: func(conn ssh.ConnMetadata, key ssh.PublicKey) (*ssh.Permissions, error) {
+			if bytes.Compare(publicpart.Marshal(), key.Marshal()) == 0 {
+				perms := ssh.Permissions{}
+				IsUserAllowedKeyAuth[conn.RemoteAddr().String()] = true
+				logger.Printf("Inbound Connection from %s", conn.RemoteAddr().String())
+				return &perms, nil
+			} else {
+				return nil, errors.New("Key does not match")
+			}
+		},
+	}
+
+	SSHConfig.AddHostKey(private)
+	listener, err := net.Listen("tcp", "0.0.0.0:48563")
+	if err != nil {
+		logger.Fatalln("Could not start TCP listening on 0.0.0.0:48563")
+	}
+	logger.Println("Waiting for TCP conns on 0.0.0.0:48563")
 
 	for {
-		// Listen for an incoming connection.
-		conn, err := l.Accept()
+		nConn, err := listener.Accept()
 		if err != nil {
-			logger.Println("Error accepting TCP: ", err.Error())
+			logger.Println("WARNING - Failed to Accept TCP conn.")
+			continue
 		}
-		// Handle connections in a new goroutine.
-		go HandlePeerConn(conn)
+		go HandleIncomingConn(nConn, SSHConfig)
 	}
+}
+
+func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig) {
+	_, chans, reqs, err := ssh.NewServerConn(nConn, config)
+	defer nConn.Close()
+	if err != nil {
+		logger.Printf("WARNING - Was unable to handshake with %s RSN %s", nConn.RemoteAddr().String(), err)
+		return
+	}
+
+	go ssh.DiscardRequests(reqs)
+
+	for newChannel := range chans {
+		if newChannel.ChannelType() != "keys" && newChannel.ChannelType() != "northstar" {
+			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
+			logger.Printf("WARNING - Rejecting %s Because they asked for a chan type %s that I don't have", nConn.RemoteAddr().String(), newChannel.ChannelType())
+			continue
+		}
+
+		channel, requests, err := newChannel.Accept()
+		if err != nil {
+			logger.Println("WARNING - Was unable to Accept channel with %s", nConn.RemoteAddr().String())
+			return
+		}
+		go ssh.DiscardRequests(requests)
+
+		if newChannel.ChannelType() == "keys" {
+			// Send them awayyyy
+			channel.Write(EncryptText(PEM_KEY, []byte(CC_KEY)))
+		} else if newChannel.ChannelType() == "northstar" {
+			// Do some stuff
+		} else {
+			logger.Printf("Unknown Channel Type, Dropping the connection to %s chan was %s", nConn.RemoteAddr().String(), newChannel.ChannelType())
+			logger.Printf("DEBUG: %x vs %x", newChannel.ChannelType(), "keys")
+			return
+		}
+
+		// go func(in <-chan *ssh.Request) {
+		// 	for req := range in {
+		// 		switch req.Type {
+		// 		case "command":
+		// 			command := string(req.Payload) //TODO deserialize struct
+		// 			fmt.Printf("Run command: %s", command)
+		// 			fmt.Println()
+		// 			channel.Write([]byte("Completed Successfully\n")) //TODO return serialized struct
+		// 			req.Reply(true, nil)
+		// 		case "file":
+		// 			//TODO Receive File
+		// 		case "close":
+		// 			channel.Close()
+		// 		default:
+		// 			fmt.Println(fmt.Sprintf("Invalid Command %s", req.Type))
+		// 		}
+		// 	}
+		// }(requests)
+	}
+
 }
 
 type PeerPacket struct {
@@ -36,4 +126,12 @@ type PeerPacket struct {
 	// TimeSent is NOT filled out on the sending end.
 	// TimeSent is so a packet can be evicted from the dupe cache after some time.
 	TimeSent int64
+}
+
+func LoadPrivKeyFromFile(file string) []byte {
+	privateBytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		logger.Fatalln("Failed to load private key")
+	}
+	return privateBytes
 }
