@@ -17,7 +17,7 @@ func DecryptText(ciphertext []byte, key []byte) []byte {
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
 	if len(ciphertext) < aes.BlockSize {
-		panic("ciphertext too short")
+		return make([]byte, 0) // Should break just about everything.
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
