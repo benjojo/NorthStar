@@ -34,6 +34,7 @@ func (p PList) ContainsIP(host string) bool {
 	defer p.m.Unlock()
 	for _, v := range p.Peers {
 		if v.ApparentIP == host {
+			logger.Printf("DEBUG %s LOOKS ALOT LIKE %s", v.ApparentIP, host)
 			return true
 		}
 	}
@@ -54,6 +55,7 @@ var GlobalPeerList PList
 func StartLookingForPeers() {
 	GlobalPeerList = PList{}
 	GlobalPeerList.Peers = make(map[int]Peer)
+	GlobalPeerList.PeerCount = 0
 
 	hash := HashValue([]byte(CC_KEY))
 	inboundchan := StartDHT(fmt.Sprintf("%x", hash[:20]))

@@ -34,6 +34,7 @@ var ReadyToBroadcast bool = false
 
 func DHTBroadcast(d *dht.DHT, hash dht.InfoHash) {
 	for {
+		logger.Println("DEBUG: ASKED DHT, ANNOUNCE FLAG IS SET TO %s", ReadyToBroadcast)
 		d.PeersRequest(string(hash), ReadyToBroadcast)
 		time.Sleep(time.Second * 30)
 	}
