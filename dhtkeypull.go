@@ -12,7 +12,7 @@ func PullDHTKey() []byte {
 	for {
 		//if GlobalPeerList.PeerCount != 0 {
 		for k, v := range GlobalPeerList.Peers {
-			logger.Printf("DEBUG: Looking in the Peer list, Going to try and pull key from %s %d", v, k)
+			debuglogger.Printf("DEBUG: Looking in the Peer list, Going to try and pull key from %s %d", v, k)
 			err, out := AttemptToPullKeyFromHost(v.ApparentIP)
 			if err != nil {
 				logger.Printf("Failed to pull key from: %s RSN %S\n", v.ApparentIP, err)

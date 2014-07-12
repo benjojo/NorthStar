@@ -34,7 +34,7 @@ func (p PList) ContainsIP(host string) bool {
 	defer p.m.Unlock()
 	for _, v := range p.Peers {
 		if v.ApparentIP == host {
-			logger.Printf("DEBUG %s LOOKS ALOT LIKE %s", v.ApparentIP, host)
+			debuglogger.Printf("DEBUG %s LOOKS ALOT LIKE %s", v.ApparentIP, host)
 			return true
 		}
 	}
@@ -65,7 +65,7 @@ func StartLookingForPeers() {
 			NewPeer.Alive = false
 			NewPeer.ApparentIP = host
 			GlobalPeerList.Add(NewPeer)
-			logger.Printf("DEBUG: Added new peer to the peer list, Host is %s", host)
+			debuglogger.Printf("DEBUG: Added new peer to the peer list, Host is %s", host)
 		}
 	}
 }

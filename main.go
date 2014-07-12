@@ -33,7 +33,6 @@ func main() {
 	go WaitForConnections()
 	logger.Printf("Got the key.")
 	for {
-		logger.Println("HAPPY!")
 		time.Sleep(time.Minute)
 	}
 }

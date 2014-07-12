@@ -8,10 +8,6 @@ import (
 	"net"
 )
 
-func WatchForNewPeers(inbound chan string) {
-
-}
-
 // 48563
 
 func WaitForConnections() {
@@ -55,7 +51,7 @@ func WaitForConnections() {
 	for {
 		nConn, err := listener.Accept()
 		if err != nil {
-			logger.Println("WARNING - Failed to Accept TCP conn.")
+			debuglogger.Println("WARNING - Failed to Accept TCP conn.")
 			continue
 		}
 		go HandleIncomingConn(nConn, SSHConfig)
@@ -66,7 +62,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig) {
 	_, chans, reqs, err := ssh.NewServerConn(nConn, config)
 	defer nConn.Close()
 	if err != nil {
-		logger.Printf("WARNING - Was unable to handshake with %s RSN %s", nConn.RemoteAddr().String(), err)
+		debuglogger.Printf("WARNING - Was unable to handshake with %s RSN %s", nConn.RemoteAddr().String(), err)
 		return
 	}
 
@@ -75,13 +71,13 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig) {
 	for newChannel := range chans {
 		if newChannel.ChannelType() != "keys" && newChannel.ChannelType() != "northstar" {
 			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
-			logger.Printf("WARNING - Rejecting %s Because they asked for a chan type %s that I don't have", nConn.RemoteAddr().String(), newChannel.ChannelType())
+			debuglogger.Printf("WARNING - Rejecting %s Because they asked for a chan type %s that I don't have", nConn.RemoteAddr().String(), newChannel.ChannelType())
 			continue
 		}
 
 		channel, requests, err := newChannel.Accept()
 		if err != nil {
-			logger.Println("WARNING - Was unable to Accept channel with %s", nConn.RemoteAddr().String())
+			debuglogger.Printf("WARNING - Was unable to Accept channel with %s", nConn.RemoteAddr().String())
 			return
 		}
 		go ssh.DiscardRequests(requests)
@@ -93,28 +89,9 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig) {
 			// Do some stuff
 		} else {
 			logger.Printf("Unknown Channel Type, Dropping the connection to %s chan was %s", nConn.RemoteAddr().String(), newChannel.ChannelType())
-			logger.Printf("DEBUG: %x vs %x", newChannel.ChannelType(), "keys")
+			debuglogger.Printf("DEBUG: %x vs %x", newChannel.ChannelType(), "keys")
 			return
 		}
-
-		// go func(in <-chan *ssh.Request) {
-		// 	for req := range in {
-		// 		switch req.Type {
-		// 		case "command":
-		// 			command := string(req.Payload) //TODO deserialize struct
-		// 			fmt.Printf("Run command: %s", command)
-		// 			fmt.Println()
-		// 			channel.Write([]byte("Completed Successfully\n")) //TODO return serialized struct
-		// 			req.Reply(true, nil)
-		// 		case "file":
-		// 			//TODO Receive File
-		// 		case "close":
-		// 			channel.Close()
-		// 		default:
-		// 			fmt.Println(fmt.Sprintf("Invalid Command %s", req.Type))
-		// 		}
-		// 	}
-		// }(requests)
 	}
 
 }
