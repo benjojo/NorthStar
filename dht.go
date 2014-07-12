@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/nictuku/dht"
+	"github.com/benjojo/dht"
 	"strings"
 	"time"
 )
