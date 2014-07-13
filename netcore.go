@@ -54,11 +54,11 @@ func WaitForConnections() {
 			debuglogger.Println("WARNING - Failed to Accept TCP conn.")
 			continue
 		}
-		go HandleIncomingConn(nConn, SSHConfig)
+		go HandleIncomingConn(nConn, SSHConfig, IsUserAllowedKeyAuth)
 	}
 }
 
-func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig) {
+func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedKeyAuth map[string]bool) {
 	_, chans, reqs, err := ssh.NewServerConn(nConn, config)
 	defer nConn.Close()
 	if err != nil {
@@ -86,7 +86,14 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig) {
 			// Send them awayyyy
 			channel.Write(EncryptText(PEM_KEY, []byte(CC_KEY)))
 		} else if newChannel.ChannelType() == "northstar" {
-			// Do some stuff
+			if IsUserAllowedKeyAuth[nConn.RemoteAddr().String()] {
+
+				go HandleNorthStarChan(channel, nConn)
+
+			} else {
+				logger.Printf("Non key authed user tried to use NS channel (Attempted attack?) [%s]", nConn.RemoteAddr().String())
+				nConn.Close() // Go away, Stop trying to be a faaake
+			}
 		} else {
 			logger.Printf("Unknown Channel Type, Dropping the connection to %s chan was %s", nConn.RemoteAddr().String(), newChannel.ChannelType())
 			debuglogger.Printf("DEBUG: %x vs %x", newChannel.ChannelType(), "keys")
@@ -94,15 +101,6 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig) {
 		}
 	}
 
-}
-
-type PeerPacket struct {
-	Service string
-	Message string
-	Host    string
-	// TimeSent is NOT filled out on the sending end.
-	// TimeSent is so a packet can be evicted from the dupe cache after some time.
-	TimeSent int64
 }
 
 func LoadPrivKeyFromFile(file string) []byte {

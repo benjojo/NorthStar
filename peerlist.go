@@ -7,12 +7,13 @@ import (
 )
 
 type Peer struct {
-	HostName   string
-	ApparentIP string
-	Conn       net.Conn
-	ID         int
-	Alive      bool
-	LastSeen   int64
+	HostName    string
+	ApparentIP  string
+	Conn        net.Conn
+	ID          int
+	Alive       bool
+	LastSeen    int64
+	MessageChan chan []byte
 }
 
 type PList struct {
@@ -68,4 +69,8 @@ func StartLookingForPeers() {
 			debuglogger.Printf("DEBUG: Added new peer to the peer list, Host is %s", host)
 		}
 	}
+}
+
+func AutoSavePeerList() {
+
 }
