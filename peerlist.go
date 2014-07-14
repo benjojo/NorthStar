@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 )
 
 type Peer struct {
@@ -17,7 +18,7 @@ type Peer struct {
 }
 
 type PList struct {
-	Peers     map[int]Peer
+	Peers     map[int]*Peer
 	PeerCount int
 	m         sync.Mutex
 }
@@ -26,7 +27,7 @@ func (p *PList) Add(n Peer) {
 	p.m.Lock()
 	p.PeerCount++
 	n.ID = p.PeerCount
-	p.Peers[p.PeerCount] = n
+	p.Peers[p.PeerCount] = &n
 	p.m.Unlock()
 }
 
@@ -55,7 +56,7 @@ var GlobalPeerList PList
 
 func StartLookingForPeers() {
 	GlobalPeerList = PList{}
-	GlobalPeerList.Peers = make(map[int]Peer)
+	GlobalPeerList.Peers = make(map[int]*Peer)
 	GlobalPeerList.PeerCount = 0
 
 	hash := HashValue([]byte(CC_KEY))
@@ -73,4 +74,21 @@ func StartLookingForPeers() {
 
 func AutoSavePeerList() {
 
+}
+
+func ScountOutNewPeers() {
+	for {
+		for k, v := range GlobalPeerList.Peers {
+			if !v.Alive {
+				debuglogger.Printf("DEBUG: Looking in the Peer list, Going to try and *connect* to from %s %d", v.ApparentIP, k)
+				err := ConnectToPeer(v)
+				if err == nil {
+					GlobalPeerList.m.Lock()
+					GlobalPeerList.Peers[k].Alive = true
+					GlobalPeerList.m.Unlock()
+				}
+			}
+		}
+		time.Sleep(time.Second * 5)
+	}
 }

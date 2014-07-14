@@ -110,3 +110,34 @@ func LoadPrivKeyFromFile(file string) []byte {
 	}
 	return privateBytes
 }
+
+func ConnectToPeer(P *Peer) error {
+	private, err := ssh.ParsePrivateKey(PEM_KEY)
+	if err != nil {
+		logger.Fatal("I got the key. It looked legit. But I can't parse it. Exiting")
+	}
+
+	config := &ssh.ClientConfig{
+		User: "northstar",
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(private),
+		},
+	}
+	client, err := ssh.Dial("tcp", P.ApparentIP, config)
+	if err != nil {
+		return err
+	}
+	Chan, requests, err := client.OpenChannel("northstar", nil)
+	if err != nil {
+		client.Close()
+		return err
+	}
+	go ssh.DiscardRequests(requests)
+	WriteChan := make(chan []byte)
+	P.Alive = true
+	P.MessageChan = WriteChan
+
+	go NSConnWriteDrain(WriteChan, Chan)
+	go NSConnReadDrain(GlobalResvChan, Chan)
+	return nil
+}

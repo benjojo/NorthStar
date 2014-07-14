@@ -32,9 +32,10 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel) {
 	for outgoing := range inbound {
 		_, err := Chan.Write(outgoing)
 		if err != nil {
-			logger.Printf("Connection Write Drain shutdown.")
+			debuglogger.Printf("Connection Write Drain shutdown.")
 			return
 		}
+		debuglogger.Printf("Writing to channel %d bytes", len(outgoing))
 	}
 }
 
@@ -45,9 +46,10 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel) {
 	for {
 		amt, err := Chan.Read(buffer)
 		if err != nil {
-			logger.Printf("Connection Read Drain shutdown.")
+			debuglogger.Printf("Connection Read Drain shutdown.")
 			return
 		}
+		debuglogger.Printf("Read from channel %d bytes", amt)
 		inbound <- buffer[:amt]
 	}
 }

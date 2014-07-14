@@ -30,9 +30,15 @@ func main() {
 		PEM_KEY = PullDHTKey()
 	}
 	ReadyToBroadcast = true
-	go WaitForConnections()
 	logger.Printf("Got the key.")
+	go WaitForConnections()
+	go ScountOutNewPeers()
+	go RelayPackets()
 	for {
-		time.Sleep(time.Minute)
+		time.Sleep(time.Second * 10)
+		Holla := PeerPacket{}
+		Holla.Message = "Hi everyone"
+		Holla.Service = "Holla"
+		SendPacket(Holla)
 	}
 }
