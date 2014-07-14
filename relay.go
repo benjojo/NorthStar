@@ -22,17 +22,18 @@ func HandleNorthStarChan(Chan ssh.Channel, nConn net.Conn) {
 	NewPeer.ApparentIP = nConn.RemoteAddr().String()
 	NewPeer.Conn = nConn
 	NewPeer.MessageChan = WriteChan
-	GlobalPeerList.Add(NewPeer)
+	GlobalPeerList.Add(&NewPeer)
 
-	go NSConnWriteDrain(WriteChan, Chan)
+	go NSConnWriteDrain(WriteChan, Chan, &NewPeer)
 	go NSConnReadDrain(GlobalResvChan, Chan)
 }
 
-func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel) {
+func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 	for outgoing := range inbound {
 		_, err := Chan.Write(outgoing)
 		if err != nil {
 			debuglogger.Printf("Connection Write Drain shutdown.")
+			Owner.Alive = false // Make sure the connection is not left hanging around
 			return
 		}
 		debuglogger.Printf("Writing to channel %d bytes", len(outgoing))
