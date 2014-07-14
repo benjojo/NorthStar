@@ -90,12 +90,12 @@ func SeenPacketBefore(P PeerPacket) bool {
 	}
 	// Add it to the cache
 	MaxItemsInCache := 1000
-	LowestTime := 9223372036854775806 // Max (int64) -1
+	LowestTime := -1 // Max (int64) -1
 	OldestItem := -1
 
 	for i := 0; i < MaxItemsInCache; i++ {
 		if PacketCache[i] != nil {
-			if PacketCache[i].LastSeen < int64(LowestTime) {
+			if PacketCache[i].LastSeen < int64(LowestTime) || LowestTime == -1 {
 				OldestItem = i
 				if PacketCache[i].LastSeen == 0 {
 					// Its a free slot!
