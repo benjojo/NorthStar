@@ -16,8 +16,11 @@ func RelayPackets() {
 	PacketCache = make(map[int]*PeerPacket)
 
 	for PD := range GlobalResvChan {
-		var network bytes.Buffer        // Stand-in for a "network" connection
-		dec := gob.NewDecoder(&network) // Will read from "network".
+		var network bytes.Buffer         // Stand-in for a "network" connection
+		var network2 bytes.Buffer        // Stand-in for a "network" connection
+		dec := gob.NewDecoder(&network)  // Will read from "network".
+		enc := gob.NewEncoder(&network2) // Will read from "network".
+
 		network.Write(PD)
 
 		InboundPacket := PeerPacket{}
@@ -26,18 +29,20 @@ func RelayPackets() {
 			logger.Printf("Unable to decode packet")
 			continue
 		}
+		enc.Encode(&InboundPacket)
 
 		debuglogger.Printf("New Packet:")
 		debuglogger.Printf("New Packet: Host: %s", InboundPacket.Host)
 		debuglogger.Printf("New Packet: Service: %s", InboundPacket.Service)
 		debuglogger.Printf("New Packet: Message: %s", InboundPacket.Message)
 		debuglogger.Printf("New Packet: Salt: %s", InboundPacket.Salt)
+		ToSend := network2.Bytes()
 		if !SeenPacketBefore(InboundPacket) {
 			GlobalPeerList.m.Lock()
 			debuglogger.Printf("New packet inbound len(%d)", len(PD))
 			for _, Host := range GlobalPeerList.Peers {
 				if Host.Alive {
-					Host.MessageChan <- PD
+					Host.MessageChan <- ToSend
 				}
 			}
 			GlobalPeerList.m.Unlock()
