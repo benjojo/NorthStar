@@ -16,10 +16,8 @@ func RelayPackets() {
 	PacketCache = make(map[int]*PeerPacket)
 
 	for PD := range GlobalResvChan {
-		var network bytes.Buffer         // Stand-in for a "network" connection
-		var network2 bytes.Buffer        // Stand-in for a "network" connection
-		dec := gob.NewDecoder(&network)  // Will read from "network".
-		enc := gob.NewEncoder(&network2) // Will read from "network".
+		var network bytes.Buffer        // Stand-in for a "network" connection
+		dec := gob.NewDecoder(&network) // Will read from "network".
 
 		network.Write(PD)
 
@@ -29,23 +27,15 @@ func RelayPackets() {
 			logger.Printf("Unable to decode packet")
 			continue
 		}
-		enc.Encode(&InboundPacket)
 
 		debuglogger.Printf("New Packet:")
 		debuglogger.Printf("New Packet: Host: %s", InboundPacket.Host)
 		debuglogger.Printf("New Packet: Service: %s", InboundPacket.Service)
 		debuglogger.Printf("New Packet: Message: %s", InboundPacket.Message)
 		debuglogger.Printf("New Packet: Salt: %s", InboundPacket.Salt)
-		ToSend := network2.Bytes()
+
 		if !SeenPacketBefore(InboundPacket) {
-			GlobalPeerList.m.Lock()
-			debuglogger.Printf("New packet inbound len(%d)", len(PD))
-			for _, Host := range GlobalPeerList.Peers {
-				if Host.Alive {
-					Host.MessageChan <- ToSend
-				}
-			}
-			GlobalPeerList.m.Unlock()
+			SendPacket(InboundPacket)
 		}
 
 	}
@@ -56,9 +46,13 @@ func SendPacket(P PeerPacket) {
 	if e != nil {
 		logger.Fatal("Cannot get hostname, This is sorta needed")
 	}
-
-	P.Host = HN
-	P.Salt = fmt.Sprintf("%s%x", RandString(7), HashValue([]byte(P.Message))[:5])
+	if P.Host == "" {
+		P.Host = HN
+	}
+	if P.Salt == "" {
+		P.Salt = fmt.Sprintf("%s%x", RandString(7), HashValue([]byte(P.Message))[:5])
+	}
+	SeenPacketBefore(P) // To put the seed in the system.
 
 	var network bytes.Buffer
 	enc := gob.NewEncoder(&network)
@@ -108,6 +102,9 @@ func SeenPacketBefore(P PeerPacket) bool {
 				}
 				LowestTime = int(PacketCache[i].LastSeen)
 			}
+		} else {
+			OldestItem = i
+			break
 		}
 	}
 
