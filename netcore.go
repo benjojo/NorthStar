@@ -89,7 +89,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 			if IsUserAllowedKeyAuth[nConn.RemoteAddr().String()] {
 
 				go HandleNorthStarChan(channel, nConn)
-
+				AskForPEX()
 			} else {
 				logger.Printf("Non key authed user tried to use NS channel (Attempted attack?) [%s]", nConn.RemoteAddr().String())
 				nConn.Close() // Go away, Stop trying to be a faaake
