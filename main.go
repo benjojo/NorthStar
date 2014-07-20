@@ -14,6 +14,7 @@ func main() {
 	dhtpos := flag.Bool("dhtdefault", false, "If you cannot get announcing to work, then set this to true")
 	debug := flag.Bool("debug", false, "Enable for debug text")
 	flag.Parse()
+	go ListenForIRCConnections()
 	SetupLogger(*debug)
 	if *key == "" || *key == "InsertLongKeyHere" || len(*key) < 8 {
 		logger.Fatal("No key or a too short key use -key=\"InsertLongKeyHere\"")
