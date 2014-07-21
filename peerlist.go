@@ -77,6 +77,7 @@ func AutoSavePeerList() {
 }
 
 func ScountOutNewPeers() {
+
 	for {
 		for k, v := range GlobalPeerList.Peers {
 			if !v.Alive {

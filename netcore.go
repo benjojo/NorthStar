@@ -15,6 +15,7 @@ func WaitForConnections() {
 	if err != nil {
 		logger.Fatal("I got the key. It looked legit. But I can't parse it. Exiting")
 	}
+	GSigner = private
 	publicpart := private.PublicKey()
 	IsUserAllowedKeyAuth := make(map[string]bool)
 
@@ -111,16 +112,14 @@ func LoadPrivKeyFromFile(file string) []byte {
 	return privateBytes
 }
 
+var GSigner ssh.Signer
+
 func ConnectToPeer(P *Peer) error {
-	private, err := ssh.ParsePrivateKey(PEM_KEY)
-	if err != nil {
-		logger.Fatal("I got the key. It looked legit. But I can't parse it. Exiting")
-	}
 
 	config := &ssh.ClientConfig{
 		User: "northstar",
 		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(private),
+			ssh.PublicKeys(GSigner),
 		},
 	}
 	client, err := ssh.Dial("tcp", P.ApparentIP, config)
