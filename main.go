@@ -28,7 +28,11 @@ func main() {
 			logger.Fatal(err)
 		}
 		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
+		go func() {
+			time.Sleep(time.Hour)
+			pprof.StopCPUProfile()
+			logger.Fatal("Done")
+		}()
 	}
 
 	if *key == "" || *key == "InsertLongKeyHere" || len(*key) < 8 {
