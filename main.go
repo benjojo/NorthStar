@@ -15,25 +15,11 @@ func main() {
 	key := flag.String("key", GetFileOrBlank("/.nskey"), "Set this as a long string that only you and the rest of your nodes know")
 	seed := flag.String("seed", "", "Set this to the key of the network, Need atleast 1 matchine on the network to have this")
 	dhtpos := flag.Bool("dhtdefault", false, "If you cannot get announcing to work, then set this to true")
-	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	debug := flag.Bool("debug", false, "Enable for debug text")
 	flag.Parse()
 
 	SetupLogger(*debug)
 	go ListenForIRCConnections()
-
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-		go func() {
-			time.Sleep(time.Hour)
-			pprof.StopCPUProfile()
-			logger.Fatal("Done")
-		}()
-	}
 
 	if *key == "" || *key == "InsertLongKeyHere" || len(*key) < 8 {
 		logger.Fatal("No key or a too short key use -key=\"InsertLongKeyHere\"")
