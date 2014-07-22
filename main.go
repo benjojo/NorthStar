@@ -33,6 +33,13 @@ func main() {
 	} else {
 		PEM_KEY = PullDHTKey()
 	}
+
+	private, err := ssh.ParsePrivateKey(PEM_KEY)
+	if err != nil {
+		logger.Fatal("Key failed to parse.")
+	}
+	GSigner = private
+
 	ReadyToBroadcast = true
 	logger.Printf("Got the key.")
 	go WaitForConnections()
