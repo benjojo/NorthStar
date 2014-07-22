@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"io/ioutil"
-	"os"
-	"runtime/pprof"
 	"time"
 )
 
