@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.google.com/p/go.crypto/ssh"
 	"flag"
 	"io/ioutil"
 	"time"
