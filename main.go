@@ -46,6 +46,7 @@ func main() {
 	go WaitForConnections()
 	go ScountOutNewPeers()
 	go RelayPackets()
+	go AutoSavePeerList()
 	for {
 		time.Sleep(time.Second * 10)
 		Holla := PeerPacket{}
