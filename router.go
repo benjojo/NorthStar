@@ -64,7 +64,8 @@ func PacketRouter(inbound chan PeerPacket) {
 func SendPacket(P PeerPacket) {
 	HN, e := os.Hostname()
 	if e != nil {
-		logger.Fatal("Cannot get hostname, This is sorta needed")
+		logger.Printf("Could not send packet, Could not read hostname for reason %s", e.Error())
+		return
 	}
 	if P.Host == "" {
 		P.Host = HN
