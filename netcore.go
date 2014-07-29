@@ -137,6 +137,6 @@ func ConnectToPeer(P *Peer) error {
 	P.MessageChan = WriteChan
 
 	go NSConnWriteDrain(WriteChan, Chan, P)
-	go NSConnReadDrain(GlobalResvChan, Chan)
+	go NSConnReadDrain(GlobalResvChan, Chan, P)
 	return nil
 }

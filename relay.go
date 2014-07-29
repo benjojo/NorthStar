@@ -25,7 +25,7 @@ func HandleNorthStarChan(Chan ssh.Channel, nConn net.Conn) {
 	GlobalPeerList.Add(&NewPeer)
 
 	go NSConnWriteDrain(WriteChan, Chan, &NewPeer)
-	go NSConnReadDrain(GlobalResvChan, Chan)
+	go NSConnReadDrain(GlobalResvChan, Chan, &NewPeer)
 }
 
 func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
@@ -41,7 +41,7 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 	}
 }
 
-func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel) {
+func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 
 	buffer := make([]byte, 25565)
 
@@ -49,6 +49,8 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel) {
 		amt, err := Chan.Read(buffer)
 		if err != nil {
 			debuglogger.Printf("Connection Read Drain shutdown.")
+			Owner.Alive = false
+			close(Owner.MessageChan)
 			return
 		}
 		debuglogger.Printf("Read from channel %d bytes", amt)

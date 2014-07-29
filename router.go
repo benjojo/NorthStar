@@ -51,6 +51,9 @@ func PacketRouter(inbound chan PeerPacket) {
 		if PD.Service == "PEX" {
 			ProcessPEXPacket(PD)
 		}
+		if PD.Service == "" {
+
+		}
 		if ConnectedIRCClients.Clients != nil {
 			for _, v := range ConnectedIRCClients.Clients {
 				if v.Channels[PD.Service] {
