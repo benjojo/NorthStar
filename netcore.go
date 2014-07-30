@@ -22,6 +22,7 @@ func WaitForConnections() {
 	// Setup logic for the SSH server.
 	SSHConfig := &ssh.ServerConfig{
 		PasswordCallback: func(conn ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
+			IsUserAllowedKeyAuth[conn.RemoteAddr().String()] = false
 			if conn.User() == "gimmekeys" && string(pass) == "gimmekeys" {
 				perms := ssh.Permissions{}
 				logger.Println("Authed a Key Pull")
@@ -37,6 +38,7 @@ func WaitForConnections() {
 				logger.Printf("Inbound Connection from %s", conn.RemoteAddr().String())
 				return &perms, nil
 			} else {
+				IsUserAllowedKeyAuth[conn.RemoteAddr().String()] = false
 				return nil, errors.New("Key does not match")
 			}
 		},
@@ -52,7 +54,7 @@ func WaitForConnections() {
 	for {
 		nConn, err := listener.Accept()
 		if err != nil {
-			debuglogger.Println("WARNING - Failed to Accept TCP conn.")
+			debuglogger.Println("WARNING - Failed to Accept TCP conn. RSN: %s / %s", err.Error(), err)
 			continue
 		}
 		go HandleIncomingConn(nConn, SSHConfig, IsUserAllowedKeyAuth)
