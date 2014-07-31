@@ -45,7 +45,7 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 
 	buffer := make([]byte, 25565)
-	var ReadLimitTime int
+	var ReadLimitTime int64
 	var PacketsRead int
 
 	for {
