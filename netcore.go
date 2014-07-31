@@ -11,12 +11,7 @@ import (
 // 48563
 
 func WaitForConnections() {
-	private, err := ssh.ParsePrivateKey(PEM_KEY)
-	if err != nil {
-		logger.Fatal("I got the key. It looked legit. But I can't parse it. Exiting")
-	}
-	GSigner = private
-	publicpart := private.PublicKey()
+	publicpart := GSigner.PublicKey()
 	IsUserAllowedKeyAuth := make(map[string]bool)
 
 	// Setup logic for the SSH server.
@@ -44,7 +39,7 @@ func WaitForConnections() {
 		},
 	}
 
-	SSHConfig.AddHostKey(private)
+	SSHConfig.AddHostKey(GSigner)
 	listener, err := net.Listen("tcp", "0.0.0.0:48563")
 	if err != nil {
 		logger.Fatalln("Could not start TCP listening on 0.0.0.0:48563")
