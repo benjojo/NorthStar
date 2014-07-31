@@ -3,6 +3,7 @@ package main
 import (
 	"code.google.com/p/go.crypto/ssh"
 	"net"
+	"time"
 )
 
 type PeerPacket struct {
@@ -44,6 +45,8 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 
 	buffer := make([]byte, 25565)
+	var ReadLimitTime int
+	var PacketsRead int
 
 	for {
 		amt, err := Chan.Read(buffer)
@@ -55,5 +58,14 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 		}
 		debuglogger.Printf("Read from channel %d bytes", amt)
 		inbound <- buffer[:amt]
+		PacketsRead++
+		if PacketsRead < PacketRateLimit {
+			logger.Printf("Rate limit kicked in for %s This is a sign of heavy traffic of bugs", Owner.ApparentIP)
+			time.Sleep(time.Millisecond * 100)
+		}
+		if ReadLimitTime != time.Now().Unix() {
+			PacketsRead = 0
+			ReadLimitTime = time.Now().Unix()
+		}
 	}
 }
