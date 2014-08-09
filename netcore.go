@@ -12,16 +12,13 @@ import (
 // 48563
 
 func WaitForConnections() {
-	private, err := ssh.ParsePrivateKey(PEM_KEY)
-	if err != nil {
-		logger.Fatal("I got the key. It looked legit. But I can't parse it. Exiting")
-	}
-	publicpart := private.PublicKey()
+	publicpart := GSigner.PublicKey()
 	IsUserAllowedKeyAuth := make(map[string]bool)
 
 	// Setup logic for the SSH server.
 	SSHConfig := &ssh.ServerConfig{
 		PasswordCallback: func(conn ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
+			IsUserAllowedKeyAuth[conn.RemoteAddr().String()] = false
 			if conn.User() == "gimmekeys" && string(pass) == "gimmekeys" {
 				perms := ssh.Permissions{}
 				logger.Println("Authed a Key Pull")
@@ -37,12 +34,13 @@ func WaitForConnections() {
 				logger.Printf("Inbound Connection from %s", conn.RemoteAddr().String())
 				return &perms, nil
 			} else {
+				IsUserAllowedKeyAuth[conn.RemoteAddr().String()] = false
 				return nil, errors.New("Key does not match")
 			}
 		},
 	}
 
-	SSHConfig.AddHostKey(private)
+	SSHConfig.AddHostKey(GSigner)
 	listener, err := net.Listen("tcp", "0.0.0.0:48563")
 	if err != nil {
 		logger.Fatalln("Could not start TCP listening on 0.0.0.0:48563")
@@ -52,7 +50,7 @@ func WaitForConnections() {
 	for {
 		nConn, err := listener.Accept()
 		if err != nil {
-			debuglogger.Println("WARNING - Failed to Accept TCP conn.")
+			debuglogger.Println("WARNING - Failed to Accept TCP conn. RSN: %s / %s", err.Error(), err)
 			continue
 		}
 		go HandleIncomingConn(nConn, SSHConfig, IsUserAllowedKeyAuth)
@@ -103,7 +101,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 			if IsUserAllowedKeyAuth[nConn.RemoteAddr().String()] {
 
 				go HandleNorthStarChan(channel, nConn)
-
+				AskForPEX()
 			} else {
 				logger.Printf("Non key authed user tried to use NS channel (Attempted attack?) [%s]", nConn.RemoteAddr().String())
 				nConn.Close() // Go away, Stop trying to be a faaake
@@ -125,16 +123,14 @@ func LoadPrivKeyFromFile(file string) []byte {
 	return privateBytes
 }
 
+var GSigner ssh.Signer
+
 func ConnectToPeer(P *Peer) error {
-	private, err := ssh.ParsePrivateKey(PEM_KEY)
-	if err != nil {
-		logger.Fatal("I got the key. It looked legit. But I can't parse it. Exiting")
-	}
 
 	config := &ssh.ClientConfig{
 		User: "northstar",
 		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(private),
+			ssh.PublicKeys(GSigner),
 		},
 	}
 	client, err := ssh.Dial("tcp", P.ApparentIP, config)
@@ -152,6 +148,6 @@ func ConnectToPeer(P *Peer) error {
 	P.MessageChan = WriteChan
 
 	go NSConnWriteDrain(WriteChan, Chan, P)
-	go NSConnReadDrain(GlobalResvChan, Chan)
+	go NSConnReadDrain(GlobalResvChan, Chan, P)
 	return nil
 }

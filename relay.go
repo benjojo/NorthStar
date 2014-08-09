@@ -3,6 +3,7 @@ package main
 import (
 	"code.google.com/p/go.crypto/ssh"
 	"net"
+	"time"
 )
 
 type PeerPacket struct {
@@ -25,7 +26,7 @@ func HandleNorthStarChan(Chan ssh.Channel, nConn net.Conn) {
 	GlobalPeerList.Add(&NewPeer)
 
 	go NSConnWriteDrain(WriteChan, Chan, &NewPeer)
-	go NSConnReadDrain(GlobalResvChan, Chan)
+	go NSConnReadDrain(GlobalResvChan, Chan, &NewPeer)
 }
 
 func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
@@ -41,17 +42,30 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 	}
 }
 
-func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel) {
+func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 
 	buffer := make([]byte, 25565)
+	var ReadLimitTime int64
+	var PacketsRead int
 
 	for {
 		amt, err := Chan.Read(buffer)
 		if err != nil {
 			debuglogger.Printf("Connection Read Drain shutdown.")
+			Owner.Alive = false
+			close(Owner.MessageChan)
 			return
 		}
 		debuglogger.Printf("Read from channel %d bytes", amt)
 		inbound <- buffer[:amt]
+		PacketsRead++
+		if PacketsRead > PacketRateLimit {
+			logger.Printf("Rate limit kicked in for %s This is a sign of heavy traffic of bugs", Owner.ApparentIP)
+			time.Sleep(time.Millisecond * 100)
+		}
+		if ReadLimitTime != time.Now().Unix() {
+			PacketsRead = 0
+			ReadLimitTime = time.Now().Unix()
+		}
 	}
 }

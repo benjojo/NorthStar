@@ -14,7 +14,8 @@ var PacketCache map[int]*PeerPacket
 func RelayPackets() {
 	GlobalResvChan = make(chan []byte)
 	PacketCache = make(map[int]*PeerPacket)
-
+	RouterChan := make(chan PeerPacket)
+	go PacketRouter(RouterChan)
 	for PD := range GlobalResvChan {
 		var network bytes.Buffer        // Stand-in for a "network" connection
 		dec := gob.NewDecoder(&network) // Will read from "network".
@@ -36,15 +37,38 @@ func RelayPackets() {
 
 		if !SeenPacketBefore(InboundPacket) {
 			SendPacket(InboundPacket)
+			RouterChan <- InboundPacket
 		}
 
+	}
+}
+
+func PacketRouter(inbound chan PeerPacket) {
+	for PD := range inbound {
+		if PD.Service == "PEX_REQUEST" {
+			MakePEXPacket()
+		}
+		if PD.Service == "PEX" {
+			ProcessPEXPacket(PD)
+		}
+		if PD.Service == "" {
+
+		}
+		if ConnectedIRCClients.Clients != nil {
+			for _, v := range ConnectedIRCClients.Clients {
+				if v.Channels[PD.Service] {
+					v.InboundChan <- PD
+				}
+			}
+		}
 	}
 }
 
 func SendPacket(P PeerPacket) {
 	HN, e := os.Hostname()
 	if e != nil {
-		logger.Fatal("Cannot get hostname, This is sorta needed")
+		logger.Printf("Could not send packet, Could not read hostname for reason %s", e.Error())
+		return
 	}
 	if P.Host == "" {
 		P.Host = HN

@@ -1,20 +1,27 @@
 package main
 
 import (
+	"code.google.com/p/go.crypto/ssh"
 	"flag"
+	"io/ioutil"
 	"time"
 )
 
 var CC_KEY string = ""
 var PEM_KEY []byte
+var PacketRateLimit int
 
 func main() {
-	key := flag.String("key", "", "Set this as a long string that only you and the rest of your nodes know")
+	key := flag.String("key", GetFileOrBlank("/.nskey"), "Set this as a long string that only you and the rest of your nodes know")
 	seed := flag.String("seed", "", "Set this to the key of the network, Need atleast 1 matchine on the network to have this")
 	dhtpos := flag.Bool("dhtdefault", false, "If you cannot get announcing to work, then set this to true")
 	debug := flag.Bool("debug", false, "Enable for debug text")
+	pps := flag.Int("ppslimit", 100, "Amount of packets to allow in per second per connection")
 	flag.Parse()
+	PacketRateLimit = *pps
 	SetupLogger(*debug)
+	go ListenForIRCConnections()
+
 	if *key == "" || *key == "InsertLongKeyHere" || len(*key) < 8 {
 		logger.Fatal("No key or a too short key use -key=\"InsertLongKeyHere\"")
 	}
@@ -29,11 +36,19 @@ func main() {
 	} else {
 		PEM_KEY = PullDHTKey()
 	}
+
+	private, err := ssh.ParsePrivateKey(PEM_KEY)
+	if err != nil {
+		logger.Fatal("Key failed to parse.")
+	}
+	GSigner = private
+
 	ReadyToBroadcast = true
 	logger.Printf("Got the key.")
 	go WaitForConnections()
 	go ScountOutNewPeers()
 	go RelayPackets()
+	go AutoSavePeerList()
 	for {
 		time.Sleep(time.Second * 10)
 		Holla := PeerPacket{}
@@ -41,4 +56,12 @@ func main() {
 		Holla.Service = "Holla"
 		SendPacket(Holla)
 	}
+}
+
+func GetFileOrBlank(path string) string {
+	b, e := ioutil.ReadFile(path)
+	if e != nil {
+		return ""
+	}
+	return string(b)
 }
