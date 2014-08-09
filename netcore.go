@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net"
+	"time"
 )
 
 // 48563
@@ -58,8 +59,21 @@ func WaitForConnections() {
 	}
 }
 
+func TimeoutConnection(Done chan bool, nConn net.Conn) {
+	select {
+	case <-Done:
+		return
+	case <-time.After(time.Second * 10):
+		nConn.Close()
+	}
+}
+
 func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedKeyAuth map[string]bool) {
+	DoneCh := make(chan bool)
+	go TimeoutConnection(DoneCh, nConn)
 	_, chans, reqs, err := ssh.NewServerConn(nConn, config)
+	DoneCh <- true
+
 	defer nConn.Close()
 	if err != nil {
 		debuglogger.Printf("WARNING - Was unable to handshake with %s RSN %s", nConn.RemoteAddr().String(), err)
