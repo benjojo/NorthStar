@@ -36,6 +36,7 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 			debuglogger.Printf("Connection Write Drain shutdown.")
 			Owner.Alive = false // Make sure the connection is not left hanging around
 			close(Owner.MessageChan)
+			Owner.MessageChan = nil
 			return
 		}
 		debuglogger.Printf("Writing to channel %d bytes", len(outgoing))
@@ -54,6 +55,7 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 			debuglogger.Printf("Connection Read Drain shutdown.")
 			Owner.Alive = false
 			close(Owner.MessageChan)
+			Owner.MessageChan = nil
 			return
 		}
 		debuglogger.Printf("Read from channel %d bytes", amt)

@@ -94,7 +94,9 @@ func SendPacket(P PeerPacket) {
 	for _, Host := range GlobalPeerList.Peers {
 		debuglogger.Printf("~!~ Host: %s IsAlive: %s", Host.ApparentIP, Host.Alive)
 		if Host.Alive {
-			Host.MessageChan <- Dispatch
+			if Host.MessageChan != nil {
+				Host.MessageChan <- Dispatch
+			}
 		}
 	}
 	GlobalPeerList.m.Unlock()
