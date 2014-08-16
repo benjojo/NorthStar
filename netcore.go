@@ -70,7 +70,9 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 	DoneCh := make(chan bool)
 	go TimeoutConnection(DoneCh, nConn)
 	_, chans, reqs, err := ssh.NewServerConn(nConn, config)
-	DoneCh <- true
+	if err == nil {
+		DoneCh <- true
+	}
 
 	defer nConn.Close()
 	if err != nil {
