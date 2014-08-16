@@ -13,11 +13,15 @@ func RunRPCShell(bashline string, jobid int) {
 	if err != nil {
 		Pack.Message = fmt.Sprintf("~%d!! Failed to run command - %s", jobid, err.Error())
 		SendPacket(Pack)
+		return
 	}
 
 	lines := strings.Split(string(out), "\n")
 	for i := 0; i < len(lines); i++ {
-		Pack.Message = fmt.Sprintf("~%d [%d/%d] Failed to run command - %s", jobid, i, len(lines), lines[i])
+		if lines[i] == "" || lines[i] == "\r" && i == len(lines)-1 {
+			return
+		}
+		Pack.Message = fmt.Sprintf("~%d [%d/%d] - %s", jobid, i, len(lines), lines[i])
 		SendPacket(Pack)
 	}
 }
