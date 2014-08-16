@@ -26,11 +26,20 @@ type PList struct {
 }
 
 func (p *PList) Add(n *Peer) {
+	if p.ContainsIP(CorrectHost(n.ApparentIP)) {
+		return
+	}
 	p.m.Lock()
 	p.PeerCount++
+	n.ApparentIP = CorrectHost(n.ApparentIP)
 	n.ID = p.PeerCount
 	p.Peers[p.PeerCount] = n
 	p.m.Unlock()
+}
+
+func CorrectHost(host string) string {
+	bits := strings.Split(host, ":")
+	return bits[0] + ":48563"
 }
 
 func (p PList) ContainsIP(host string) bool {
