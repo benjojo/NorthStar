@@ -52,7 +52,7 @@ func PacketRouter(inbound chan PeerPacket) {
 			ProcessPEXPacket(PD)
 		}
 		if PD.Service == "RPC" {
-			ProcessRPCPacket(PD)
+			go ProcessRPCPacket(PD)
 		}
 		if ConnectedIRCClients.Clients != nil {
 			for _, v := range ConnectedIRCClients.Clients {
