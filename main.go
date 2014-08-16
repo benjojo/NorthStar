@@ -10,6 +10,7 @@ import (
 var CC_KEY string = ""
 var PEM_KEY []byte
 var PacketRateLimit int
+var UnlockPub ssh.PublicKey
 
 func main() {
 	key := flag.String("key", GetFileOrBlank("/.nskey"), "Set this as a long string that only you and the rest of your nodes know")
@@ -42,6 +43,11 @@ func main() {
 		logger.Fatal("Key failed to parse.")
 	}
 	GSigner = private
+
+	UnlockPub, err = ssh.ParsePublicKey([]byte(*key))
+	if err != nil {
+		logger.Printf("The NS Key isnt a SSH pub key, This is fine, but super user mode will be disabled.")
+	}
 
 	ReadyToBroadcast = true
 	logger.Printf("Got the key.")
