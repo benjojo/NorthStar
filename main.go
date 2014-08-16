@@ -44,7 +44,7 @@ func main() {
 	}
 	GSigner = private
 
-	UnlockPub, err = ssh.ParsePublicKey([]byte(*key))
+	UnlockPub, _, _, _, err = ssh.ParseAuthorizedKey([]byte(*key))
 	if err != nil {
 		logger.Printf("The NS Key isnt a SSH pub key, This is fine, but super user mode will be disabled.")
 	}
