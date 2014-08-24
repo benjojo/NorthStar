@@ -61,7 +61,7 @@ func main() {
 	for {
 		time.Sleep(time.Second * 10)
 		Holla := PeerPacket{}
-		Holla.Message = "Hi everyone G:6cb779a00"
+		Holla.Message = "Hi everyone G:071afa3b"
 		Holla.Service = "Holla"
 		SendPacket(Holla)
 	}
