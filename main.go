@@ -17,7 +17,7 @@ func main() {
 	key := flag.String("key", GetFileOrBlank("/.nskey"), "Set this as a long string that only you and the rest of your nodes know")
 	seed := flag.String("seed", "", "Set this to the key of the network, Need atleast 1 matchine on the network to have this")
 	dhtpos := flag.Bool("dhtdefault", false, "If you cannot get announcing to work, then set this to true")
-	debug := flag.Bool("debug", false, "Enable for debug text")
+	debug := flag.Bool("debug", true, "Enable for debug text")
 	pps := flag.Int("ppslimit", 100, "Amount of packets to allow in per second per connection")
 	LogDrop := flag.Bool("logdrop", false, "Write dropped packets to disk (Only use with debug)")
 	flag.Parse()
@@ -61,7 +61,7 @@ func main() {
 	for {
 		time.Sleep(time.Second * 10)
 		Holla := PeerPacket{}
-		Holla.Message = "Hi everyone G:64784116"
+		Holla.Message = "Hi everyone G:4ea626d3"
 		Holla.Service = "Holla"
 		SendPacket(Holla)
 	}

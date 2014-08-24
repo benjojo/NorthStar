@@ -42,7 +42,7 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 			Owner.MessageChan = nil
 			return
 		}
-		debuglogger.Printf("Writing to channel %d bytes", len(outgoing))
+		debuglogger.Printf("[->] %s -> %d bytes", Owner.ApparentIP, len(outgoing))
 	}
 }
 
@@ -63,7 +63,7 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 			Owner.MessageChan = nil
 			return
 		}
-		debuglogger.Printf("Read from channel %d bytes", amt)
+		debuglogger.Printf("[<-] Me <- %s %d bytes", Owner.ApparentIP, len(outgoing))
 		PacketsRead++
 		if PacketsRead > PacketRateLimit {
 			logger.Printf("Rate limit kicked in for %s This is a sign of heavy traffic of (proabbly bugs)", Owner.ApparentIP)

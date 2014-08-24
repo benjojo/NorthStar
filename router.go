@@ -29,11 +29,7 @@ func RelayPackets() {
 			continue
 		}
 
-		debuglogger.Printf("New Packet:")
-		debuglogger.Printf("New Packet: Host: %s", InboundPacket.Host)
-		debuglogger.Printf("New Packet: Service: %s", InboundPacket.Service)
-		debuglogger.Printf("New Packet: Message: %s", InboundPacket.Message)
-		debuglogger.Printf("New Packet: Salt: %s", InboundPacket.Salt)
+		debuglogger.Printf("[~] NewPacket: Host: '%s' / '%s' / '%s'", InboundPacket.Host, InboundPacket.Service, InboundPacket.Salt)
 
 		if !SeenPacketBefore(InboundPacket) {
 			SendPacket(InboundPacket)
@@ -92,8 +88,8 @@ func SendPacket(P PeerPacket) {
 
 	debuglogger.Printf("Dispatching packet to all nodes size: %d", len(Dispatch))
 	for _, Host := range GlobalPeerList.Peers {
-		debuglogger.Printf("~!~ Host: %s IsAlive: %s", Host.ApparentIP, Host.Alive)
 		if Host.Alive {
+			debuglogger.Printf("[Ch->] %s", Host.ApparentIP)
 			if Host.MessageChan != nil {
 				Host.MessageChan <- Dispatch
 			}
