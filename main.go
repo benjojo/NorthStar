@@ -11,6 +11,7 @@ var CC_KEY string = ""
 var PEM_KEY []byte
 var PacketRateLimit int
 var UnlockPub ssh.PublicKey
+var LogDroppedPackets bool
 
 func main() {
 	key := flag.String("key", GetFileOrBlank("/.nskey"), "Set this as a long string that only you and the rest of your nodes know")
@@ -18,7 +19,9 @@ func main() {
 	dhtpos := flag.Bool("dhtdefault", false, "If you cannot get announcing to work, then set this to true")
 	debug := flag.Bool("debug", false, "Enable for debug text")
 	pps := flag.Int("ppslimit", 100, "Amount of packets to allow in per second per connection")
+	LogDrop := flag.Bool("logdrop", false, "Write dropped packets to disk (Only use with debug)")
 	flag.Parse()
+	LogDroppedPackets = *LogDrop
 	PacketRateLimit = *pps
 	SetupLogger(*debug)
 	go ListenForIRCConnections()
