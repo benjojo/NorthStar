@@ -30,6 +30,8 @@ func HandleNorthStarChan(Chan ssh.Channel, nConn net.Conn) {
 }
 
 func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
+	logger.Printf("[W] Peer connection has Started! for [%s]", Owner.ApparentIP)
+
 	for outgoing := range inbound {
 		_, err := Chan.Write(outgoing)
 		if err != nil {
@@ -45,6 +47,7 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 }
 
 func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
+	logger.Printf("[R] Peer connection has Started! for [%s]", Owner.ApparentIP)
 
 	buffer := make([]byte, 25565)
 	var ReadLimitTime int64
