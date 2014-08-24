@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -85,7 +84,7 @@ func ProcessRPCPacket(inbound PeerPacket) {
 			return
 		}
 
-		go RunRPCShell(inbound.Message[1:], rand.Int())
+		go RunRPCShell(inbound.Message[1:], RandString(5))
 	}
 
 	if strings.HasPrefix(inbound.Message, "!") && len(inbound.Message) != 1 {
