@@ -22,7 +22,7 @@ func ProcessPEXPacket(P PeerPacket) {
 			NewPeer := Peer{}
 			NewPeer.Alive = false
 			NewPeer.ApparentIP = PEXData.Peers[i]
-			GlobalPeerList.Add(&NewPeer)
+			GlobalPeerList.Add(&NewPeer, -1)
 			debuglogger.Printf("Obtained peer (%s) though PEX thanks to %s", PEXData.Peers[i], P.Host)
 		}
 	}

@@ -23,7 +23,11 @@ func HandleNorthStarChan(Chan ssh.Channel, nConn net.Conn) {
 	NewPeer.ApparentIP = nConn.RemoteAddr().String()
 	NewPeer.Conn = nConn
 	NewPeer.MessageChan = WriteChan
-	GlobalPeerList.Add(&NewPeer)
+	if GlobalPeerList.FindByIP(CorrectHost(nConn.RemoteAddr().String())) != -1 {
+		GlobalPeerList.Add(&NewPeer, GlobalPeerList.FindByIP(CorrectHost(nConn.RemoteAddr().String())))
+	} else {
+		GlobalPeerList.Add(&NewPeer, -1)
+	}
 
 	go NSConnWriteDrain(WriteChan, Chan, &NewPeer)
 	go NSConnReadDrain(GlobalResvChan, Chan, &NewPeer)

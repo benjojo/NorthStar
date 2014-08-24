@@ -25,15 +25,22 @@ type PList struct {
 	m         sync.Mutex
 }
 
-func (p *PList) Add(n *Peer) {
-	if p.ContainsIP(CorrectHost(n.ApparentIP)) {
+func (p *PList) Add(n *Peer, idoverride int) {
+	if p.ContainsIP(CorrectHost(n.ApparentIP)) && idoverride == -1 {
 		return
 	}
 	p.m.Lock()
-	p.PeerCount++
+
 	n.ApparentIP = CorrectHost(n.ApparentIP)
-	n.ID = p.PeerCount
-	p.Peers[p.PeerCount] = n
+	if idoverride != -1 {
+		n.ID = idoverride
+		p.Peers[idoverride] = n
+	} else {
+		p.PeerCount++
+		n.ID = p.PeerCount
+		p.Peers[p.PeerCount] = n
+	}
+
 	p.m.Unlock()
 }
 
@@ -52,6 +59,17 @@ func (p PList) ContainsIP(host string) bool {
 		}
 	}
 	return false
+}
+
+func (p PList) FindByIP(host string) int {
+	p.m.Lock()
+	defer p.m.Unlock()
+	for k, v := range p.Peers {
+		if v.ApparentIP == host && v.Alive == false {
+			return k
+		}
+	}
+	return -1
 }
 
 func (p PList) RemoveByStruct(n Peer) {
@@ -78,7 +96,7 @@ func StartLookingForPeers() {
 			NewPeer := Peer{}
 			NewPeer.Alive = false
 			NewPeer.ApparentIP = host
-			GlobalPeerList.Add(&NewPeer)
+			GlobalPeerList.Add(&NewPeer, -1)
 			debuglogger.Printf("DEBUG: Added new peer to the peer list, Host is %s", host)
 		}
 	}
@@ -117,7 +135,7 @@ func RestorePeerList() {
 			NewPeer := Peer{}
 			NewPeer.Alive = false
 			NewPeer.ApparentIP = lines[i]
-			GlobalPeerList.Add(&NewPeer)
+			GlobalPeerList.Add(&NewPeer, -1)
 		}
 	}
 }
