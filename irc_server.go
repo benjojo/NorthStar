@@ -100,6 +100,13 @@ func HandleIRCConn(conn net.Conn, connectionnumber int) {
 			conn.Write([]byte(fmt.Sprintf(":%s!~%s@localhost PART #%s * :NS Client\r\n", IRCUsername, IRCUsername, ChanName)))
 		}
 
+		if strings.HasPrefix(line, "PING ") {
+			PTokenBits := strings.Split(line, ":")
+			if len(PTokenBits) == 2 {
+				conn.Write([]byte(fmt.Sprintf(":%s!~%s@localhost PONG :%s\r\n", IRCUsername, IRCUsername, PTokenBits[1])))
+			}
+		}
+
 		if strings.HasPrefix(line, "PRIVMSG ") {
 			ChanName := strings.Replace(strings.Split(line, " ")[1], "#", "", -1)
 			//HACKS ALERT
