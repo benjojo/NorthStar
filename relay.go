@@ -74,6 +74,12 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 			return
 		}
 		debuglogger.Printf("[<-] Me <- %s %d bytes", Owner.ApparentIP, amt)
+
+		if ReadLimitTime != time.Now().Unix() {
+			PacketsRead = 0
+			ReadLimitTime = time.Now().Unix()
+		}
+
 		PacketsRead++
 		if PacketsRead > PacketRateLimit {
 			logger.Printf("Rate limit kicked in for %s This is a sign of heavy traffic of (proabbly bugs)", Owner.ApparentIP)
@@ -84,9 +90,5 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 		}
 		inbound <- buffer[:amt]
 
-		if ReadLimitTime != time.Now().Unix() {
-			PacketsRead = 0
-			ReadLimitTime = time.Now().Unix()
-		}
 	}
 }
