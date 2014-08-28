@@ -41,9 +41,12 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 		if err != nil {
 			logger.Printf("[W] Peer connection has closed for [%s]", Owner.ApparentIP)
 			debuglogger.Printf("Connection Write Drain shutdown.")
+			Owner.m.Lock()
 			Owner.Alive = false // Make sure the connection is not left hanging around
 			close(Owner.MessageChan)
 			Owner.MessageChan = nil
+			Owner.m.Unlock()
+
 			return
 		}
 		debuglogger.Printf("[->] %s -> %d bytes", Owner.ApparentIP, len(outgoing))
@@ -62,9 +65,12 @@ func NSConnReadDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 		if err != nil {
 			logger.Printf("[R] Peer connection has closed for [%s]", Owner.ApparentIP)
 			debuglogger.Printf("Connection Read Drain shutdown.")
+			Owner.m.Lock()
 			Owner.Alive = false
 			close(Owner.MessageChan)
 			Owner.MessageChan = nil
+			Owner.m.Unlock()
+
 			return
 		}
 		debuglogger.Printf("[<-] Me <- %s %d bytes", Owner.ApparentIP, amt)

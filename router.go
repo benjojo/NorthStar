@@ -88,12 +88,15 @@ func SendPacket(P PeerPacket) {
 
 	debuglogger.Printf("Dispatching packet to all nodes size: %d", len(Dispatch))
 	for _, Host := range GlobalPeerList.Peers {
+		Host.m.Lock()
 		if Host.Alive {
 			debuglogger.Printf("[Ch->] %s", Host.ApparentIP)
 			if Host.MessageChan != nil {
 				Host.MessageChan <- Dispatch
 			}
 		}
+		Host.m.Unlock()
+
 	}
 	GlobalPeerList.m.Unlock()
 }

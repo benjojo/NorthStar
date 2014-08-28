@@ -16,6 +16,7 @@ type Peer struct {
 	ID          int
 	Alive       bool
 	LastSeen    int64
+	m           sync.Mutex
 	MessageChan chan []byte
 }
 
