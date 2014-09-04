@@ -33,7 +33,7 @@ func (p *PList) Add(n *Peer, idoverride int) {
 	p.m.Lock()
 
 	n.ApparentIP = CorrectHost(n.ApparentIP)
-	if idoverride != -1 {
+	if idoverride != -1 && p.Peers[idoverride].Alive == false {
 		n.ID = idoverride
 		p.Peers[idoverride] = n
 	} else {
