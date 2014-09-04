@@ -148,6 +148,7 @@ func ConnectToPeer(P *Peer) error {
 	WriteChan := make(chan []byte)
 	P.Alive = true
 	P.MessageChan = WriteChan
+	P.Conn = client
 
 	go NSConnWriteDrain(WriteChan, Chan, P)
 	go NSConnReadDrain(GlobalResvChan, Chan, P)
