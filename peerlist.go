@@ -27,9 +27,6 @@ type PList struct {
 }
 
 func (p *PList) Add(n *Peer, idoverride int) {
-	if p.ContainsIP(CorrectHost(n.ApparentIP)) && idoverride == -1 {
-		return
-	}
 	p.m.Lock()
 
 	n.ApparentIP = CorrectHost(n.ApparentIP)
