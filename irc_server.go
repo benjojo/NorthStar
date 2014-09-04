@@ -118,11 +118,9 @@ func HandleIRCConn(conn net.Conn, connectionnumber int) {
 		}
 
 		if strings.HasPrefix(line, "ROUTING") {
-			GlobalPeerList.m.Lock()
 			for k, v := range GlobalPeerList.Peers {
 				_, err := conn.Write(GenerateIRCPrivateMessage(fmt.Sprintf("R: %d | %d / %s [%s]", k, v.ID, v.ApparentIP, v.Alive), "#SYS", "SYS", "SYS"))
 			}
-			GlobalPeerList.m.Unlock()
 		}
 	}
 }
