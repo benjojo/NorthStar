@@ -69,7 +69,7 @@ func TimeoutConnection(Done chan bool, nConn net.Conn) {
 func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedKeyAuth map[string]bool) {
 	DoneCh := make(chan bool)
 	go TimeoutConnection(DoneCh, nConn)
-	_, chans, reqs, err := ssh.NewServerConn(nConn, config)
+	sshconn, chans, reqs, err := ssh.NewServerConn(nConn, config)
 	if err == nil {
 		DoneCh <- true
 	}
@@ -102,7 +102,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 		} else if newChannel.ChannelType() == "northstar" {
 			if IsUserAllowedKeyAuth[nConn.RemoteAddr().String()] {
 
-				go HandleNorthStarChan(channel, nConn)
+				go HandleNorthStarChan(channel, nConn, sshconn)
 				AskForPEX()
 			} else {
 				logger.Printf("Non key authed user tried to use NS channel (Attempted attack?) [%s]", nConn.RemoteAddr().String())
@@ -148,7 +148,7 @@ func ConnectToPeer(P *Peer) error {
 	WriteChan := make(chan []byte)
 	P.Alive = true
 	P.MessageChan = WriteChan
-	P.Conn = client
+	P.Conn = client.Conn
 
 	go NSConnWriteDrain(WriteChan, Chan, P)
 	go NSConnReadDrain(GlobalResvChan, Chan, P)

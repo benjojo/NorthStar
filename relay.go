@@ -14,14 +14,14 @@ type PeerPacket struct {
 	LastSeen int64
 }
 
-func HandleNorthStarChan(Chan ssh.Channel, nConn net.Conn) {
+func HandleNorthStarChan(Chan ssh.Channel, nConn net.Conn, sshconn ssh.Conn) {
 	logger.Printf("New peer %s", nConn.RemoteAddr().String())
 	// First we need to add the host into the peer list.
 	WriteChan := make(chan []byte)
 	NewPeer := Peer{}
 	NewPeer.Alive = true
 	NewPeer.ApparentIP = nConn.RemoteAddr().String()
-	NewPeer.Conn = nConn
+	NewPeer.Conn = sshconn
 	NewPeer.MessageChan = WriteChan
 	GlobalPeerList.Add(&NewPeer, -1)
 

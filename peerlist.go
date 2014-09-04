@@ -1,9 +1,9 @@
 package main
 
 import (
+	"code.google.com/p/go.crypto/ssh"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"strings"
 	"sync"
 	"time"
@@ -12,7 +12,7 @@ import (
 type Peer struct {
 	HostName    string
 	ApparentIP  string
-	Conn        net.Conn
+	Conn        ssh.Conn
 	ID          int
 	Alive       bool
 	LastSeen    int64
