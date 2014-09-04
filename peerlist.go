@@ -100,7 +100,7 @@ func StartLookingForPeers() {
 	}
 }
 
-func AutoSavePeerList() {
+func SystemCleanup() {
 	SaveList := ""
 	for {
 		SaveList = ""
@@ -117,6 +117,23 @@ func AutoSavePeerList() {
 		if err != nil {
 			debuglogger.Printf("Unable to save peer list to a cache because of %s", err)
 		}
+
+		// Now scan the peer list for connections that are open but have not had convo for +120 seconds
+		GlobalPeerList.m.Lock()
+		for _, v := range GlobalPeerList.Peers {
+			if v.Alive && v.LastSeen < time.Now().Unix()-120 {
+				v.m.Lock()
+				v.Alive = false
+				v.Conn.Close()
+				close(v.MessageChan) // it was probs already closed tbh
+				v.m.Unlock()
+				logger.Printf("[!] Purged dead looking connection from host %s", v.ApparentIP)
+			} else if v.LastSeen == 0 {
+				v.LastSeen = time.Now().Unix()
+			}
+		}
+		GlobalPeerList.m.Unlock()
+
 	}
 }
 

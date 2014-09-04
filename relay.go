@@ -46,6 +46,7 @@ func NSConnWriteDrain(inbound chan []byte, Chan ssh.Channel, Owner *Peer) {
 			return
 		}
 		debuglogger.Printf("[->] %s -> %d bytes", Owner.ApparentIP, len(outgoing))
+		Owner.LastSeen = time.Now().Unix()
 	}
 }
 

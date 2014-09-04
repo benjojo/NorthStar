@@ -56,7 +56,7 @@ func main() {
 	logger.Printf("Got the key.")
 	go WaitForConnections()
 	go ScountOutNewPeers()
-	go RelayPackets()
+	go SystemCleanup()
 	go AutoSavePeerList()
 	for {
 		time.Sleep(time.Second * 10)
