@@ -132,7 +132,7 @@ func RestorePeerList() {
 
 	lines := strings.Split(string(b), "\n")
 	for i := 0; i < len(lines); i++ {
-		if !GlobalPeerList.ContainsIP(lines[i]) {
+		if !GlobalPeerList.ContainsIP(lines[i]) && lines[i] != "" && lines[i] != "\r" {
 			NewPeer := Peer{}
 			NewPeer.Alive = false
 			NewPeer.ApparentIP = lines[i]
