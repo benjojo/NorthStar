@@ -21,7 +21,7 @@ func RunRPCShell(bashline string, jobid string) {
 		if lines[i] == "" || lines[i] == "\r" && i == len(lines)-1 {
 			return
 		}
-		Pack.Message = fmt.Sprintf("~%d [%d/%d] - %s", jobid, i, len(lines)-1, lines[i])
+		Pack.Message = fmt.Sprintf("~%s [%d/%d] - %s", jobid, i+1, len(lines)-1, lines[i])
 		SendPacket(Pack)
 	}
 }
