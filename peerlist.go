@@ -101,9 +101,8 @@ func StartLookingForPeers() {
 }
 
 func SystemCleanup() {
-	SaveList := ""
 	for {
-		SaveList = ""
+		var SaveList string
 		time.Sleep(time.Minute)
 		GlobalPeerList.m.Lock()
 		for _, v := range GlobalPeerList.Peers {
@@ -116,6 +115,8 @@ func SystemCleanup() {
 
 		if err != nil {
 			debuglogger.Printf("Unable to save peer list to a cache because of %s", err)
+		} else {
+			debuglogger.Printf("Saved Peer list")
 		}
 
 		// Now scan the peer list for connections that are open but have not had convo for +120 seconds
@@ -133,7 +134,6 @@ func SystemCleanup() {
 			}
 		}
 		GlobalPeerList.m.Unlock()
-
 	}
 }
 
