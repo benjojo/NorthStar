@@ -92,7 +92,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 		channel, requests, err := newChannel.Accept()
 		if err != nil {
 			debuglogger.Printf("WARNING - Was unable to Accept channel with %s", nConn.RemoteAddr().String())
-			return
+			return // If we cannot accept the channel then we have probs ran out of ram, so lets disconnect this.
 		}
 		go ssh.DiscardRequests(requests)
 

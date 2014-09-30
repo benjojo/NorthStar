@@ -80,6 +80,7 @@ func SendPacket(P PeerPacket) {
 
 	if e != nil {
 		logger.Printf("Could not encode a packet(!) Service: %s", P.Service)
+		return
 	}
 
 	GlobalPeerList.m.Lock()
