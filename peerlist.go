@@ -161,12 +161,7 @@ func ScountOutNewPeers() {
 		for k, v := range GlobalPeerList.Peers {
 			if !v.Alive {
 				debuglogger.Printf("DEBUG: Looking in the Peer list, Going to try and *connect* to from %s %d", v.ApparentIP, k)
-				err := ConnectToPeer(v)
-				if err == nil {
-					GlobalPeerList.m.Lock()
-					GlobalPeerList.Peers[k].Alive = true
-					GlobalPeerList.m.Unlock()
-				}
+				ConnectToPeer(v)
 			}
 		}
 		time.Sleep(time.Second * 5)
