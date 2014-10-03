@@ -36,7 +36,7 @@ func (p *PList) Add(n *Peer, idoverride int) {
 	} else {
 		p.PeerCount++
 		n.ID = p.PeerCount
-		p.Peers[p.PeerCount] = n
+		p.Peers[n.ID] = n
 	}
 
 	p.m.Unlock()
