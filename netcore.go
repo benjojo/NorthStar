@@ -83,7 +83,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 	go ssh.DiscardRequests(reqs)
 
 	for newChannel := range chans {
-		if newChannel.ChannelType() != "keys" && newChannel.ChannelType() != "northstar" {
+		if newChannel.ChannelType() != "keys" && newChannel.ChannelType() != "northstar" && newChannel.ChannelType() != "nodeid" {
 			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
 			debuglogger.Printf("WARNING - Rejecting %s Because they asked for a chan type %s that I don't have", nConn.RemoteAddr().String(), newChannel.ChannelType())
 			continue
@@ -108,6 +108,9 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 				logger.Printf("Non key authed user tried to use NS channel (Attempted attack?) [%s]", nConn.RemoteAddr().String())
 				nConn.Close() // Go away, Stop trying to be a faaake
 			}
+		} else if newChannel.ChannelType() == "nodeid" {
+			channel.Write([]byte(NodeID))
+			channel.Close()
 		} else {
 			logger.Printf("Unknown Channel Type, Dropping the connection to %s chan was %s", nConn.RemoteAddr().String(), newChannel.ChannelType())
 			debuglogger.Printf("DEBUG: %x vs %x", newChannel.ChannelType(), "keys")
