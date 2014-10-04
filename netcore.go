@@ -110,6 +110,21 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 			}
 		} else if newChannel.ChannelType() == "nodeid" {
 			channel.Write([]byte(NodeID))
+			inbound := make([]byte, 22)
+			in, err := channel.Read(inbound)
+			if string(inbound[:in]) == NodeID || err != nil {
+				nConn.Close()
+				return
+			}
+
+			for _, v := range GlobalPeerList.Peers {
+				if v.NodeID == string(inbound[:in]) {
+					v.Alive = false
+					v.Conn.Close()
+					logger.Printf("Dropping dupe connection to avoid loops from %s", v.ApparentIP)
+				}
+			}
+
 			channel.Close()
 		} else {
 			logger.Printf("Unknown Channel Type, Dropping the connection to %s chan was %s", nConn.RemoteAddr().String(), newChannel.ChannelType())
@@ -153,10 +168,12 @@ func ConnectToPeer(P *Peer) error {
 		client.Close()
 		return err
 	}
+	IDChan.Write([]byte(NodeID))
 	RemoteID := string(IDBuffer[:in])
 	if RemoteID == NodeID {
 		// Oh. Thats us.
 		// Huh.
+		client.Close()
 		GlobalPeerList.RemoveByStruct(*P)
 		return err
 	}
