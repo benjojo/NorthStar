@@ -171,6 +171,7 @@ func ConnectToPeer(P *Peer) error {
 			logger.Printf("Dropping dupe connection to avoid loops from %s", v.ApparentIP)
 		}
 	}
+	P.NodeID = RemoteID // Assgin it so it can get killed later.
 
 	Chan, requests, err := client.OpenChannel("northstar", nil)
 	if err != nil {
