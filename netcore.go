@@ -162,10 +162,10 @@ func ConnectToPeer(P *Peer) error {
 	}
 
 	// Good idea to check that there isnt any other connections with this ID.
-	// If there is. Bashem and let this one replace them.
+	// If there is. Bash'em and let this one replace them.
 
 	for _, v := range GlobalPeerList.Peers {
-		if v.HID == RemoteID {
+		if v.NodeID == RemoteID {
 			v.Alive = false
 			v.Conn.Close()
 		}

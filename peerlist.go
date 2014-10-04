@@ -17,7 +17,7 @@ type Peer struct {
 	Alive       bool
 	LastSeen    int64
 	m           sync.Mutex
-	HID         string
+	NodeID      string
 	MessageChan chan []byte
 }
 
