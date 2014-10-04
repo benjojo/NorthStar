@@ -168,6 +168,7 @@ func ConnectToPeer(P *Peer) error {
 		if v.NodeID == RemoteID {
 			v.Alive = false
 			v.Conn.Close()
+			logger.Printf("Dropping dupe connection to avoid loops from %s", v.ApparentIP)
 		}
 	}
 
