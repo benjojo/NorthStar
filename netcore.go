@@ -142,6 +142,35 @@ func ConnectToPeer(P *Peer) error {
 	if err != nil {
 		return err
 	}
+	IDChan, _, err := client.OpenChannel("nodeid", nil)
+	if err != nil {
+		client.Close()
+		return err
+	}
+	IDBuffer := make([]byte, 22)
+	in, err := IDChan.Read(IDBuffer)
+	if err != nil {
+		client.Close()
+		return err
+	}
+	RemoteID := string(IDBuffer[:in])
+	if RemoteID == NodeID {
+		// Oh. Thats us.
+		// Huh.
+		GlobalPeerList.RemoveByStruct(*P)
+		return err
+	}
+
+	// Good idea to check that there isnt any other connections with this ID.
+	// If there is. Bashem and let this one replace them.
+
+	for _, v := range GlobalPeerList.Peers {
+		if v.HID == RemoteID {
+			v.Alive = false
+			v.Conn.Close()
+		}
+	}
+
 	Chan, requests, err := client.OpenChannel("northstar", nil)
 	if err != nil {
 		client.Close()

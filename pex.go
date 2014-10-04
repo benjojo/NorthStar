@@ -33,6 +33,7 @@ func MakePEXPacket() {
 	Outgoing.Peers = make([]string, 0)
 
 	GlobalPeerList.m.Lock()
+	debuglogger.Println("GPList is locked")
 	for _, v := range GlobalPeerList.Peers {
 		if v.Alive {
 			PeerIP := v.ApparentIP
@@ -41,6 +42,7 @@ func MakePEXPacket() {
 			Outgoing.Peers = append(Outgoing.Peers, PeerIP)
 		}
 	}
+	debuglogger.Println("GPList is unlocked")
 	GlobalPeerList.m.Unlock()
 
 	Packet := PeerPacket{}

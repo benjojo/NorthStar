@@ -12,6 +12,7 @@ var PEM_KEY []byte
 var PacketRateLimit int
 var UnlockPub ssh.PublicKey
 var LogDroppedPackets bool
+var NodeID string // This is a token that is used to find nodes that are the same.
 
 func main() {
 	key := flag.String("key", GetFileOrBlank("/.nskey"), "Set this as a long string that only you and the rest of your nodes know")
@@ -25,6 +26,7 @@ func main() {
 	PacketRateLimit = *pps
 	SetupLogger(*debug)
 	go ListenForIRCConnections()
+	NodeID = RandString(20)
 
 	if *key == "" || *key == "InsertLongKeyHere" || len(*key) < 8 {
 		logger.Fatal("No key or a too short key use -key=\"InsertLongKeyHere\"")
