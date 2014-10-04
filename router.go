@@ -84,6 +84,8 @@ func SendPacket(P PeerPacket) {
 	}
 
 	GlobalPeerList.m.Lock()
+
+	debuglogger.Println("GPList is locked")
 	Dispatch := network.Bytes()
 	debuglogger.Printf("Sending packet %x", HashValue(Dispatch))
 
@@ -99,7 +101,9 @@ func SendPacket(P PeerPacket) {
 		Host.m.Unlock()
 
 	}
+
 	GlobalPeerList.m.Unlock()
+	debuglogger.Println("GPList is unlocked")
 }
 
 // Check to see if the packet has been already seen,

@@ -49,7 +49,11 @@ func CorrectHost(host string) string {
 
 func (p PList) ContainsIP(host string) bool {
 	p.m.Lock()
+	debuglogger.Println("GPList is locked")
+
 	defer p.m.Unlock()
+	defer debuglogger.Println("GPList is unlocked")
+
 	for _, v := range p.Peers {
 		if v.ApparentIP == host {
 			debuglogger.Printf("DEBUG %s LOOKS ALOT LIKE %s", v.ApparentIP, host)
@@ -61,7 +65,10 @@ func (p PList) ContainsIP(host string) bool {
 
 func (p PList) FindByIP(host string) int {
 	p.m.Lock()
+	debuglogger.Println("GPList is locked")
+
 	defer p.m.Unlock()
+	defer debuglogger.Println("GPList is unlocked")
 	for k, v := range p.Peers {
 		if v.ApparentIP == host && v.Alive == false {
 			return k
@@ -105,12 +112,15 @@ func SystemCleanup() {
 		var SaveList string
 		time.Sleep(time.Minute)
 		GlobalPeerList.m.Lock()
+		debuglogger.Println("GPList is locked")
+
 		for _, v := range GlobalPeerList.Peers {
 			if v.Alive {
 				SaveList = SaveList + strings.Split(v.ApparentIP, ":")[0] + ":48563\n"
 			}
 		}
 		GlobalPeerList.m.Unlock()
+		debuglogger.Println("GPList is unlocked")
 		err := ioutil.WriteFile("/.nspeerlistcache", []byte(SaveList), 660)
 
 		if err != nil {
@@ -121,12 +131,13 @@ func SystemCleanup() {
 
 		// Now scan the peer list for connections that are open but have not had convo for +120 seconds
 		GlobalPeerList.m.Lock()
+		debuglogger.Println("GPList is locked")
+
 		for _, v := range GlobalPeerList.Peers {
 			if v.Alive && v.LastSeen < time.Now().Unix()-120 {
 				v.m.Lock()
 				v.Alive = false
 				v.Conn.Close()
-				close(v.MessageChan) // it was probs already closed tbh
 				v.m.Unlock()
 				logger.Printf("[!] Purged dead looking connection from host %s", v.ApparentIP)
 			} else if v.LastSeen == 0 {
@@ -134,6 +145,7 @@ func SystemCleanup() {
 			}
 		}
 		GlobalPeerList.m.Unlock()
+		debuglogger.Println("GPList is unlocked")
 	}
 }
 
