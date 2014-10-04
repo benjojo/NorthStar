@@ -48,11 +48,6 @@ func CorrectHost(host string) string {
 }
 
 func (p PList) ContainsIP(host string) bool {
-	p.m.Lock()
-	debuglogger.Println("GPList is locked")
-
-	defer p.m.Unlock()
-	defer debuglogger.Println("GPList is unlocked")
 
 	for _, v := range p.Peers {
 		if v.ApparentIP == host {
