@@ -180,15 +180,17 @@ func ConnectToPeer(P *Peer) error {
 
 	// Good idea to check that there isnt any other connections with this ID.
 	// If there is. Bash'em and let this one replace them.
-
-	for _, v := range GlobalPeerList.Peers {
+	GlobalPeerList.m.Lock()
+	for k, v := range GlobalPeerList.Peers {
 		if v.NodeID == RemoteID {
 			v.Alive = false
 			v.Conn.Close()
+			delete(GlobalPeerList.Peers, k)
 			logger.Printf("Dropping dupe connection to avoid loops from %s", v.ApparentIP)
 		}
 	}
 	P.NodeID = RemoteID // Assgin it so it can get killed later.
+	GlobalPeerList.m.Unlock()
 
 	Chan, requests, err := client.OpenChannel("northstar", nil)
 	if err != nil {
