@@ -17,6 +17,7 @@ type Peer struct {
 	Alive       bool
 	LastSeen    int64
 	m           sync.Mutex
+	LastAttempt int64
 	NodeID      string
 	MessageChan chan []byte
 }
@@ -177,9 +178,10 @@ func ScountOutNewPeers() {
 
 	for {
 		for k, v := range GlobalPeerList.Peers {
-			if !v.Alive {
+			if !v.Alive && v.LastAttempt+300 > time.Now().Unix() {
 				debuglogger.Printf("DEBUG: Looking in the Peer list, Going to try and *connect* to from %s %d", v.ApparentIP, k)
 				ConnectToPeer(v)
+				v.LastAttempt = time.Now().Unix()
 			}
 		}
 		time.Sleep(time.Second * 5)
