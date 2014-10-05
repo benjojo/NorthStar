@@ -3,11 +3,14 @@ package main
 import (
 	"encoding/json"
 	"strings"
+	"time"
 )
 
 type PEXPacket struct {
 	Peers []string
 }
+
+var LastPEXTime int64 = 0
 
 func ProcessPEXPacket(P PeerPacket) {
 	PEXData := PEXPacket{}
@@ -29,6 +32,12 @@ func ProcessPEXPacket(P PeerPacket) {
 }
 
 func MakePEXPacket() {
+
+	if LastPEXTime+30 > time.Now().Unix() { // Only allow PEX every 30 secs
+		return
+	}
+	LastPEXTime = time.Now().Unix()
+
 	Outgoing := PEXPacket{}
 	Outgoing.Peers = make([]string, 0)
 
