@@ -140,6 +140,16 @@ func SystemCleanup() {
 				v.LastSeen = time.Now().Unix()
 			}
 		}
+
+		bucket := make(map[string]int)
+		for k, v := range GlobalPeerList.Peers {
+			if !v.Alive && bucket[v.ApparentIP] > 2 {
+				delete(GlobalPeerList.Peers, k)
+				logger.Printf("[!] Purged dead looking connection from host %s", v.ApparentIP)
+			} else if !v.Alive {
+				bucket[v.ApparentIP]++
+			}
+		}
 		GlobalPeerList.m.Unlock()
 		debuglogger.Println("GPList is unlocked")
 	}
