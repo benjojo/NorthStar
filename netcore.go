@@ -117,6 +117,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 				return
 			}
 
+			GlobalPeerList.m.Lock()
 			for _, v := range GlobalPeerList.Peers {
 				if v.NodeID == string(inbound[:in]) {
 					v.Alive = false
@@ -124,6 +125,7 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 					logger.Printf("Dropping dupe connection to avoid loops from %s", v.ApparentIP)
 				}
 			}
+			GlobalPeerList.m.Unlock()
 
 			channel.Close()
 		} else {
