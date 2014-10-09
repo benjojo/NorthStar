@@ -174,7 +174,7 @@ func ConnectToPeer(P *Peer) error {
 		// Oh. Thats us.
 		// Huh.
 		client.Close()
-		GlobalPeerList.RemoveByStruct(*P)
+		delete(GlobalPeerList.Peers, P.ID)
 		return err
 	}
 
