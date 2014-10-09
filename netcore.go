@@ -182,7 +182,7 @@ func ConnectToPeer(P *Peer) error {
 	// If there is. Bash'em and let this one replace them.
 	GlobalPeerList.m.Lock()
 	for k, v := range GlobalPeerList.Peers {
-		if v.NodeID == RemoteID {
+		if v.NodeID == RemoteID && v.LastSeen < time.Now().Unix()-180 {
 			v.Alive = false
 			v.Conn.Close()
 			delete(GlobalPeerList.Peers, k)
