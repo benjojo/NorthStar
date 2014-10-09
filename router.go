@@ -95,7 +95,13 @@ func SendPacket(P PeerPacket) {
 		if Host.Alive {
 			debuglogger.Printf("[Ch->] %s", Host.ApparentIP)
 			if Host.MessageChan != nil {
-				Host.MessageChan <- Dispatch
+				select {
+				case Host.MessageChan <- Dispatch:
+				//k
+				case <-time.After(2 * time.Second):
+					logger.Printf("Timed out a send on %s", Host.ApparentIP)
+				}
+
 			}
 		}
 		Host.m.Unlock()
