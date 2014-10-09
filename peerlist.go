@@ -146,7 +146,17 @@ func SystemCleanup() {
 		for k, v := range GlobalPeerList.Peers {
 			if !v.Alive && bucket[v.ApparentIP] > 2 {
 				delete(GlobalPeerList.Peers, k)
-				logger.Printf("[!] Purged dead looking connection from host %s", v.ApparentIP)
+				logger.Printf("[!] Garbage Collected %s from the peer list to avoid dupes", v.ApparentIP)
+			} else if !v.Alive {
+				bucket[v.ApparentIP]++
+			}
+		}
+
+		bucket = make(map[string]int)
+		for k, v := range GlobalPeerList.Peers {
+			if v.Alive && bucket[v.ApparentIP] > 2 {
+				delete(GlobalPeerList.Peers, k)
+				logger.Printf("[!] Garbage Collected (alive) %s from the peer list to avoid loops", v.ApparentIP)
 			} else if !v.Alive {
 				bucket[v.ApparentIP]++
 			}
