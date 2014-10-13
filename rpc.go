@@ -47,7 +47,7 @@ func AttemptToUnlock(code string) error {
 
 	// Before checking if the sig is valid, lets check the easy stuff first.
 
-	if math.Abs(float64(time.Now().Unix()-SigTime)) > 60 {
+	if math.Abs(float64(time.Now().Unix()-SigTime)) > 120 {
 		return fmt.Errorf("Time sig is out of scope (Maybe system clock is incorrect)")
 	}
 
