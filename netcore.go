@@ -121,7 +121,9 @@ func HandleIncomingConn(nConn net.Conn, config *ssh.ServerConfig, IsUserAllowedK
 			for _, v := range GlobalPeerList.Peers {
 				if v.NodeID == string(inbound[:in]) {
 					v.Alive = false
-					v.Conn.Close()
+					if v.Conn != nil {
+						v.Conn.Close()
+					}
 					logger.Printf("Dropping dupe connection to avoid loops from %s", v.ApparentIP)
 				}
 			}
