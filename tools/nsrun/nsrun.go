@@ -77,6 +77,7 @@ func main() {
 	ExpectedResponces := make([]string, 0)
 	NewLinesChan := make(chan string)
 	go ReadLinesOffConnection(connreader, NewLinesChan)
+	fmt.Print("Systems who responded: ")
 CommsLoop:
 	for {
 		select {
@@ -84,16 +85,12 @@ CommsLoop:
 			if strings.Contains(line, "System Unlocked") {
 				ExpectedResponces = AddHostsToExpectedList(line, ExpectedResponces)
 			}
-		case <-time.After(time.Second * 5):
+		case <-time.After(time.Second * 3):
 			break CommsLoop
 		}
 	}
 
 	// Print out the hosts who we are expecting responces from.
-	fmt.Print("Systems who responded: ")
-	for _, v := range ExpectedResponces {
-		fmt.Print(v + " ")
-	}
 	fmt.Print("\n")
 
 	con.Write([]byte(fmt.Sprintf("PRIVMSG #RPC :#%s\r\n", cmdlinestring)))
@@ -167,6 +164,7 @@ func AddHostsToExpectedList(IRCMessage string, list []string) []string {
 	if strings.HasPrefix(IRCMessage, ":") && strings.Contains(IRCMessage, "PRIVMSG #RPC :System Unlocked.") {
 		// Okay so a host has unlocked!
 		hostname := IRCMessage[1:strings.Index(IRCMessage, "!")]
+		fmt.Print(hostname + " ")
 		list = append(list, hostname)
 		return list
 	}
