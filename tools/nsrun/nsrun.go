@@ -18,6 +18,13 @@ import (
 	"time"
 )
 
+type RSP_S struct {
+	Lines          []string
+	Max            int64
+	Gained         int64
+	AlreadyPrinted bool
+}
+
 func main() {
 	keypath := flag.String("key", "./.nsmasterkey", "The path to the NorthStar master key")
 	extra := flag.Args()
@@ -95,7 +102,8 @@ CommsLoop:
 
 	con.Write([]byte(fmt.Sprintf("PRIVMSG #RPC :#%s\r\n", cmdlinestring)))
 
-	Responces := make(map[string][]string)
+	Responces := make(map[string]RSP_S)
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
@@ -116,15 +124,19 @@ WaitForResponcesLoop:
 	}
 
 	for h, responce := range Responces {
+		if responce.AlreadyPrinted {
+			continue
+		}
+
 		fmt.Println("-----------------------------------------")
 		fmt.Printf("Host: %s\n\n", h)
-		for _, v := range responce {
+		for _, v := range responce.Lines {
 			fmt.Println(v)
 		}
 	}
 }
 
-func HandlePossibleResponce(inbound string, datamap map[string][]string) {
+func HandlePossibleResponce(inbound string, datamap map[string]RSP_S) {
 	// :au!~au@au PRIVMSG #RPC :~5mF2x [1/1] -  23:08:13 up 57 days, 20:58,  0 users,  load average: 0.00, 0.00, 0.00
 	hostname := inbound[1:strings.Index(inbound, "!")]
 	bits := strings.Split(inbound, " ")
@@ -139,13 +151,25 @@ func HandlePossibleResponce(inbound string, datamap map[string][]string) {
 	if err != nil {
 		log.Fatal("Unable to decode number !!!")
 	}
-
-	if datamap[hostname] == nil {
-		datamap[hostname] = make([]string, max+1)
+	databit := datamap[hostname]
+	if databit.Lines == nil {
+		databit.Lines = make([]string, max+1)
 	}
 
+	databit.Max = max
+	databit.Gained++
+
 	CleanString := strings.Replace(inbound, fmt.Sprintf("%s %s %s %s %s %s", bits[0], bits[1], bits[2], bits[3], bits[4], bits[5]), "", 1)
-	datamap[hostname][cur-1] = CleanString
+	databit.Lines[cur-1] = CleanString
+	if databit.Max <= databit.Gained {
+		fmt.Println("-----------------------------------------")
+		fmt.Printf("Host: %s\n\n", hostname)
+		for _, v := range databit.Lines {
+			fmt.Println(v)
+		}
+		databit.AlreadyPrinted = true
+	}
+	datamap[hostname] = databit
 }
 
 func ReadLinesOffConnection(in *bufio.Reader, out chan string) {
