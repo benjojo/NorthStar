@@ -124,7 +124,7 @@ func SeenPacketBefore(P PeerPacket) bool {
 		}
 	}
 	// Add it to the cache
-	MaxItemsInCache := 1000
+	MaxItemsInCache := PacketRateLimit * 300
 	LowestTime := -1 // Max (int64) -1
 	OldestItem := -1
 

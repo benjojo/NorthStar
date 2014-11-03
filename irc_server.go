@@ -122,6 +122,14 @@ func HandleIRCConn(conn net.Conn, connectionnumber int) {
 				conn.Write(GenerateIRCPrivateMessage(fmt.Sprintf("R: %d | %d / %s [%s]", k, v.ID, v.ApparentIP, v.Alive), "#SYS", "SYS", "SYS"))
 			}
 		}
+
+		if strings.HasPrefix(line, "ATLAS") {
+			for host, connectedto := range PeerAtlas {
+				for _, ct := range connectedto {
+					conn.Write(GenerateIRCPrivateMessage(fmt.Sprintf("Peer [%s] -> %s", host, ct), "#SYS", "SYS", "SYS"))
+				}
+			}
+		}
 	}
 }
 
