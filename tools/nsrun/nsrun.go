@@ -112,7 +112,7 @@ WaitForResponcesLoop:
 	for {
 		select {
 		case line := <-NewLinesChan:
-			if strings.Contains(line, "PRIVMSG #RPC :") {
+			if strings.Contains(line, "PRIVMSG #RPC :") && strings.Contains(line, "~") {
 				// A responce!
 				HandlePossibleResponce(line, Responces)
 			}
