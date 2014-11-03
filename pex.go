@@ -11,8 +11,13 @@ type PEXPacket struct {
 }
 
 var LastPEXTime int64 = 0
+var PeerAtlas map[string][]string
 
 func ProcessPEXPacket(P PeerPacket) {
+	if PeerAtlas == nil {
+		PeerAtlas = make(map[string][]string)
+	}
+
 	PEXData := PEXPacket{}
 	err := json.Unmarshal([]byte(P.Message), &PEXData)
 	if err != nil {
@@ -29,6 +34,7 @@ func ProcessPEXPacket(P PeerPacket) {
 			debuglogger.Printf("Obtained peer (%s) though PEX thanks to %s", PEXData.Peers[i], P.Host)
 		}
 	}
+	PeerAtlas[P.Host] = PEXData.Peers
 }
 
 func MakePEXPacket() {
