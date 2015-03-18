@@ -1,0 +1,28 @@
+NorthStar
+===
+
+Northstar is a Message relay ( ensures message delivery by gossiping between all connected nodes ) that uses DHT to find other peers.
+
+It is worth noting that this software was written to solve a problem and then dumped when a better solution came around (when I scaled pass the point where gossip networks consumed undesirable amounts of bandwidth), if I was to describe this codebase with a color, it would be moldy green, it was thrown up in a hurry and was not cleaned up.
+
+If you really do want to use this software read on:
+
+### Launch procedure ( Please do not run this )
+
+Ensure all nodes have a consistent key, Place this key in /.nskey and ensure that there are no trailing newlines at the end, do note, if you want to use the RPC functions that NorthStar has, this key has to be a SSH public key.
+
+After that you will need to generate a SSH key in OpenSSH format, once you have done that you need to pick one node ( or if you are feeling lucky you won't ever have to key the system in the future because of how the transport key exchange is done )
+
+Once you have done that, and all of your node have the software installed and ready in a init.d script (or the init system of your choosing) you need to launch a single node in "seed" mode with a path to the key, you can do this by using `-key /path/to/key` on the command args.
+
+Then start the seed node and wait a few seconds for the DHT network to propagate it's state. Then start the other nodes (again, make sure the /.nskey is the same) and then the other nodes will pull the key from the "seed" node and hold in RAM for the rest of time as long as it is running. Then when nodes come and go they will get the key and give the key to other new nodes that have the same /.nskey.
+
+For this reason you should restarting every node at the exact same time. Because you may lose the key from all the nodes other than the seed node (if you even had one, I ran a network for a year without a seed node because at no point did all of the nodes go down at the same time)
+
+Once that is running you can connect to the IRC interface (it's pretty janky)
+
+`nc localhost 6669`
+
+and then `JOIN` a topic.
+
+You can check the status of nodes and them being online by going into the `#Holla` Topic.
